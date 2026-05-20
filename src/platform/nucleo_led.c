@@ -9,4 +9,5 @@ void led_init(void) {
   GPIO_set_pin_mode(LED_PORT, LED_PIN, GPIO_MODE_OUTPUT);
 }
 
-void led_on(void) { GPIO_pin_set(LED_PORT, LED_PIN); }
+void led_on(void) { GPIO_set_pin(LED_PORT, LED_PIN); }
+void led_off(void) { GPIO_clear_pin(LED_PORT, LED_PIN); }

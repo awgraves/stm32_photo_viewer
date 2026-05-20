@@ -23,10 +23,10 @@ static inline void GPIO_set_pin_mode(GPIO_T *port, uint8_t pin,
   port->MODER |= (mode << (2 * pin));
 }
 
-static inline void GPIO_pin_set(GPIO_T *port, uint8_t pin) {
+static inline void GPIO_set_pin(GPIO_T *port, uint8_t pin) {
   port->BSRR = (1U << pin);
 }
 
-static inline void GPIO_pin_clear(GPIO_T *port, uint8_t pin) {
+static inline void GPIO_clear_pin(GPIO_T *port, uint8_t pin) {
   port->BSRR = (1U << (pin + 16));
 }
