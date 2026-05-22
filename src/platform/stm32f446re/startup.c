@@ -15,11 +15,26 @@ typedef void (*ISR_HANDLER_T)(void);
 void NMI_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void HardFault_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void MemManage_Handler(void) __attribute__((weak, alias("Default_Handler")));
+void Systick_Handler(void) __attribute__((weak, alias("Default_Handler")));
 
 // RM0390 pg. 235
 __attribute__((section(".vtable"))) ISR_HANDLER_T vtable[96 + 16] = {
-    (ISR_HANDLER_T)&_estack, &Reset_Handler, &NMI_Handler, &HardFault_Handler,
-    &MemManage_Handler};
+    (ISR_HANDLER_T)&_estack,
+    &Reset_Handler,
+    &NMI_Handler,
+    &HardFault_Handler,
+    &MemManage_Handler,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    &Systick_Handler};
 
 void Default_Handler(void) {
   while (1) {

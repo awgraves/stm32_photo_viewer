@@ -31,9 +31,9 @@ SECTIONS
   .bss : {
     . = ALIGN(4);
     _sbss = .;
-    *(.data*)
+    *(.bss*)
     . = ALIGN(4);
     _ebss = .;
-  } >FLASH
+  } >SRAM
 }
 

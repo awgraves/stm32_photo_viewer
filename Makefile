@@ -19,9 +19,10 @@ LDFLAGS=-mcpu=cortex-m4 -mthumb \
 #
 # Files to Process
 #
-SOURCES = main.c \
-					platform/stm32f446re/startup.c \
-					platform/nucleo_led.c
+SOURCES = platform/stm32f446re/startup.c \
+					platform/stm32f446re/time.c \
+					platform/nucleo_led.c \
+					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)
 OBJECTS = $(addprefix $(OBJ_DIR)/,$(OBJ_NAMES))
@@ -48,7 +49,7 @@ flash: build
 map:
 	less $(BUILD_DIR)/code.map
 
-openocd:
+debug_server:
 	openocd -f board/st_nucleo_f4.cfg
 
 debug:

@@ -4,8 +4,27 @@
 
 #define BIT(n) (1U << (n))
 
-// 16mHz
-#define CPU_FREQ (16000000UL)
+#define CPU_FREQ_HZ (16000000UL)
+#define CPU_TICKS_PER_MS (CPU_FREQ_HZ / 1000)
+/*
+   Systick info comes from Arm Cortex M4 general user guid pg. 249
+
+   For SYS_CRS values:
+   bit 2 set: set clock source as internal CPU clock
+   bit 1 set: enable Systick IRQ
+   bit 0 set: enable the counter
+*/
+#define SYSTICK_BASE (0xE000E010)
+#define SYSTICK_CSR_BITS (BIT(2) | BIT(1) | BIT(0))
+
+typedef struct {
+  volatile uint32_t CSR;
+  volatile uint32_t RVR;
+  volatile uint32_t CVR;
+  volatile uint32_t CALIB;
+} SYSTICK_T;
+
+#define SYSTICK ((SYSTICK_T *const)SYSTICK_BASE)
 
 // RM0390 pg. 57
 #define RCC_BASE (0x40023800UL)

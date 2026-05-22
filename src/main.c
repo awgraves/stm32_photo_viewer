@@ -1,14 +1,14 @@
 #include "platform/nucleo_led.h"
+#include "platform/time.h"
 
 int main() {
+  time_init();
   led_init();
 
   while (1) {
-    for (int i = 0; i < 500000; i++)
-      ;
+    delay_ms(250);
     led_on();
-    for (int i = 0; i < 500000; i++)
-      ;
+    delay_ms(250);
     led_off();
   }
 }
