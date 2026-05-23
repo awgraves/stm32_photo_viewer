@@ -32,10 +32,15 @@ typedef struct {
 
 // RM0390 pg. 170
 typedef struct {
-  volatile uint32_t _unused_1[12], AHB1ENR, _unused_2[25];
+  volatile uint32_t _unused_1[12], AHB1ENR, _unused_2[4], APB2ENR,
+      _unused_3[20];
 } RCC_T;
 
 #define RCC ((RCC_T *const)RCC_BASE)
+// RM0390 pg.143
+#define AHB1ENR_GPIOA (BIT(0))
+// RM0390 pg. 148
+#define APB2ENR_SPI1 (BIT(12))
 
 // RM0390 pg. 191
 typedef struct {
@@ -44,3 +49,51 @@ typedef struct {
 } GPIO_T;
 
 #define GPIOA ((GPIO_T *const)GPIOA_BASE)
+
+// SPI register map RM0390 pg. 874
+typedef struct {
+  volatile uint32_t CR1, CR2, SR, DR, CRCPR, RXCRCR, TXCRCR, _unused[2];
+} SPI_T;
+
+// RM0390 pg. 866
+// bits 5:3 on SPI_CR1
+typedef enum {
+  SPI_BAUD_DIV_2,
+  SPI_BAUD_DIV_4,
+  SPI_BAUD_DIV_8,
+  // unused
+} SPI_BAUD;
+
+// CR1
+#define SPI_ENABLE (BIT(6))
+#define SPI_MASTER (BIT(2))
+
+// SR
+#define SPI_BSY (BIT(7))
+#define SPI_TXE (BIT(1))
+
+// RM0390 pg. 58
+// on APB2 bus
+#define SPI1_BASE (0x40013000UL)
+#define SPI1 ((SPI_T *const)SPI1_BASE)
+
+/*
+For LCD
+| Function  | Pin |
+| --------- | --- |
+| SPI1_SCK  | PA5 |
+| SPI1_MOSI | PA7 |
+| LCD_CS    | PA9 |
+| LCD_DC    | PA8 |
+| LCD_RST   | PA10 |
+*/
+// Nucleo board user manual pg. 47
+// for nucleo board pins, see board user manual pg. 36
+#define SPI1_SCK_PA_PINNO (5)
+#define SPI1_MOSI_PA_PINNO (7)
+#define SPI1_CS_PA_PINNO (9) // note this is manual CS
+#define LCD_DC_PA_PINNO (8)
+#define LCD_RST_PA_PINNO (10)
+
+// AF5 for SPI1
+#define SPI1_AF (0x5U)
