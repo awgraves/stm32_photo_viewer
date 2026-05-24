@@ -1,5 +1,5 @@
-#include "../time.h"
-#include "registers.h"
+#include "time.h"
+#include "_registers.h"
 
 static volatile uint32_t systicks = 0;
 

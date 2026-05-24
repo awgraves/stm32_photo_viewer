@@ -22,9 +22,9 @@ typedef struct {
   volatile uint32_t RVR;
   volatile uint32_t CVR;
   volatile uint32_t CALIB;
-} SYSTICK_T;
+} SYSTICK_t;
 
-#define SYSTICK ((SYSTICK_T *const)SYSTICK_BASE)
+#define SYSTICK ((SYSTICK_t *const)SYSTICK_BASE)
 
 // RM0390 pg. 57
 #define RCC_BASE (0x40023800UL)
@@ -34,9 +34,9 @@ typedef struct {
 typedef struct {
   volatile uint32_t _unused_1[12], AHB1ENR, _unused_2[4], APB2ENR,
       _unused_3[20];
-} RCC_T;
+} RCC_t;
 
-#define RCC ((RCC_T *const)RCC_BASE)
+#define RCC ((RCC_t *const)RCC_BASE)
 // RM0390 pg.143
 #define AHB1ENR_GPIOA (BIT(0))
 // RM0390 pg. 148
@@ -46,14 +46,14 @@ typedef struct {
 typedef struct {
   volatile uint32_t MODER, OTYPER, OSPEEDER, PUPDR, IDR, ODR, BSRR, LCKR, AFRL,
       AFRH;
-} GPIO_T;
+} GPIO_t;
 
-#define GPIOA ((GPIO_T *const)GPIOA_BASE)
+#define GPIOA ((GPIO_t *const)GPIOA_BASE)
 
 // SPI register map RM0390 pg. 874
 typedef struct {
   volatile uint32_t CR1, CR2, SR, DR, CRCPR, RXCRCR, TXCRCR, _unused[2];
-} SPI_T;
+} SPI_t;
 
 // RM0390 pg. 866
 // bits 5:3 on SPI_CR1
@@ -62,11 +62,13 @@ typedef enum {
   SPI_BAUD_DIV_4,
   SPI_BAUD_DIV_8,
   // unused
-} SPI_BAUD;
+} spi_baud_t;
 
 // CR1
 #define SPI_ENABLE (BIT(6))
 #define SPI_MASTER (BIT(2))
+#define SPI_SSM (BIT(9))
+#define SPI_SSI (BIT(8))
 
 // SR
 #define SPI_BSY (BIT(7))
@@ -75,7 +77,7 @@ typedef enum {
 // RM0390 pg. 58
 // on APB2 bus
 #define SPI1_BASE (0x40013000UL)
-#define SPI1 ((SPI_T *const)SPI1_BASE)
+#define SPI1 ((SPI_t *const)SPI1_BASE)
 
 /*
 For LCD
@@ -95,5 +97,4 @@ For LCD
 #define LCD_DC_PA_PINNO (8)
 #define LCD_RST_PA_PINNO (10)
 
-// AF5 for SPI1
-#define SPI1_AF (0x5U)
+#define AF_SPI (0x5U)

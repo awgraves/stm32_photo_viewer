@@ -5,7 +5,7 @@ CC=arm-none-eabi-gcc
 GDB=arm-none-eabi-gdb
 OBJ_SIZE=arm-none-eabi-size
 
-LS_PATH=./src/platform/stm32f446re/link.ld
+LS_PATH=./src/platform/link.ld
 BUILD_DIR=./build
 OBJ_DIR=$(BUILD_DIR)/objs
 
@@ -19,9 +19,10 @@ LDFLAGS=-mcpu=cortex-m4 -mthumb \
 #
 # Files to Process
 #
-SOURCES = platform/stm32f446re/startup.c \
-					platform/stm32f446re/time.c \
-					platform/nucleo_led.c \
+SOURCES = platform/startup.c \
+					platform/time.c \
+					platform/gpio.c \
+					drivers/led.c \
 					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)
