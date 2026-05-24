@@ -1,5 +1,5 @@
 #include "drivers/led.h"
-#include "platform/time.h"
+#include "mcu/time.h"
 
 int main() {
   time_init();

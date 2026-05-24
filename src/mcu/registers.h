@@ -97,4 +97,4 @@ For LCD
 #define LCD_DC_PA_PINNO (8)
 #define LCD_RST_PA_PINNO (10)
 
-#define AF_SPI (0x5U)
+#define AF_SPI1 (0x5U)

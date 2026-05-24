@@ -5,7 +5,7 @@ CC=arm-none-eabi-gcc
 GDB=arm-none-eabi-gdb
 OBJ_SIZE=arm-none-eabi-size
 
-LS_PATH=./src/platform/link.ld
+LS_PATH=./src/mcu/link.ld
 BUILD_DIR=./build
 OBJ_DIR=$(BUILD_DIR)/objs
 
@@ -19,9 +19,9 @@ LDFLAGS=-mcpu=cortex-m4 -mthumb \
 #
 # Files to Process
 #
-SOURCES = platform/startup.c \
-					platform/time.c \
-					platform/gpio.c \
+SOURCES = mcu/startup.c \
+					mcu/time.c \
+					board/board.c \
 					drivers/led.c \
 					main.c
 
