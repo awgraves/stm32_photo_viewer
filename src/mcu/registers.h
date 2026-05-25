@@ -74,27 +74,6 @@ typedef enum {
 #define SPI_BSY (BIT(7))
 #define SPI_TXE (BIT(1))
 
-// RM0390 pg. 58
 // on APB2 bus
 #define SPI1_BASE (0x40013000UL)
 #define SPI1 ((SPI_t *const)SPI1_BASE)
-
-/*
-For LCD
-| Function  | Pin |
-| --------- | --- |
-| SPI1_SCK  | PA5 |
-| SPI1_MOSI | PA7 |
-| LCD_CS    | PA9 |
-| LCD_DC    | PA8 |
-| LCD_RST   | PA10 |
-*/
-// Nucleo board user manual pg. 47
-// for nucleo board pins, see board user manual pg. 36
-#define SPI1_SCK_PA_PINNO (5)
-#define SPI1_MOSI_PA_PINNO (7)
-#define SPI1_CS_PA_PINNO (9) // note this is manual CS
-#define LCD_DC_PA_PINNO (8)
-#define LCD_RST_PA_PINNO (10)
-
-#define AF_SPI1 (0x5U)

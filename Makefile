@@ -21,7 +21,7 @@ LDFLAGS=-mcpu=cortex-m4 -mthumb \
 #
 SOURCES = mcu/startup.c \
 					mcu/time.c \
-					board/board.c \
+					mcu/gpio.c \
 					drivers/led.c \
 					main.c
 

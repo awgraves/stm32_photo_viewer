@@ -6,9 +6,9 @@ int main() {
   led_init();
 
   while (1) {
-    delay_ms(500);
+    delay_ms(100);
     led_on();
-    delay_ms(500);
+    delay_ms(100);
     led_off();
   }
 }
