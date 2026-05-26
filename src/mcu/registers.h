@@ -55,15 +55,6 @@ typedef struct {
   volatile uint32_t CR1, CR2, SR, DR, CRCPR, RXCRCR, TXCRCR, _unused[2];
 } SPI_t;
 
-// RM0390 pg. 866
-// bits 5:3 on SPI_CR1
-typedef enum {
-  SPI_BAUD_DIV_2,
-  SPI_BAUD_DIV_4,
-  SPI_BAUD_DIV_8,
-  // unused
-} spi_baud_t;
-
 // CR1
 #define SPI_ENABLE (BIT(6))
 #define SPI_MASTER (BIT(2))
@@ -73,6 +64,7 @@ typedef enum {
 // SR
 #define SPI_BSY (BIT(7))
 #define SPI_TXE (BIT(1))
+#define SPI_RXNE (BIT(0))
 
 // on APB2 bus
 #define SPI1_BASE (0x40013000UL)

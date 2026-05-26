@@ -10,7 +10,8 @@ BUILD_DIR=./build
 OBJ_DIR=$(BUILD_DIR)/objs
 
 CFLAGS=-c -mcpu=cortex-m4 -mthumb -std=gnu11 \
-				 -g -Wall -Werror
+			 -Isrc \
+			 -g -Wall -Werror
 
 LDFLAGS=-mcpu=cortex-m4 -mthumb \
 				-nostdlib \
@@ -22,7 +23,7 @@ LDFLAGS=-mcpu=cortex-m4 -mthumb \
 SOURCES = mcu/startup.c \
 					mcu/time.c \
 					mcu/gpio.c \
-					drivers/led.c \
+					mcu/spi.c \
 					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)
@@ -40,6 +41,9 @@ $(BUILD_DIR)/code.elf: $(OBJECTS)
 $(OBJ_DIR)/%.o: src/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^
+
+compile_commands :
+	bear -- make -B
 
 clean:
 	rm -rf build/*
