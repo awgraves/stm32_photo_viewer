@@ -24,6 +24,7 @@ SOURCES = mcu/startup.c \
 					mcu/time.c \
 					mcu/gpio.c \
 					mcu/spi.c \
+					drivers/ili9341.c \
 					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)

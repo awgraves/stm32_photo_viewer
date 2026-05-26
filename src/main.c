@@ -1,4 +1,5 @@
 #include "board/board.h"
+#include "drivers/ili9341.h"
 #include "mcu/spi.h"
 #include "mcu/time.h"
 
@@ -7,16 +8,18 @@ int main() {
 
   spi_config_t spi1_conf = {
       .mosi = LCD_SPI_MOSI, .sck = LCD_SPI_SCK, .baud = SPI_BAUD_DIV_2};
-
   spi_init(&spi1, &spi1_conf);
-  gpio_set_mode(LCD_CS, GPIO_MODE_OUTPUT);
 
-  uint8_t data[3] = {0xAA, 0xFF, 0x55};
+  ili9341_config_t lcd_c = {
+      .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST};
+  ili9341_init(&lcd_c);
 
   while (1) {
-    gpio_set_pin(LCD_CS);
-    spi_tx(&spi1, data, 3);
-    gpio_clear_pin(LCD_CS);
+    ili9341_fill(COLOR_RED);
+    delay_ms(1000);
+    ili9341_fill(COLOR_GREEN);
+    delay_ms(1000);
+    ili9341_fill(COLOR_BLUE);
     delay_ms(1000);
   }
 }
