@@ -1,5 +1,4 @@
 #pragma once
-#include <stdbool.h>
 #include <stdint.h>
 
 typedef enum {
@@ -21,6 +20,8 @@ typedef enum {
   PA15 = 0x0F
 } gpio_pin_t;
 
+typedef enum { LOW, HIGH } gpio_digital_t;
+
 // RM0390 pg. 185
 typedef enum {
   GPIO_MODE_INPUT,
@@ -39,4 +40,4 @@ void gpio_set_AF(gpio_pin_t pin, gpio_af_t af);
 
 void gpio_set_pin(gpio_pin_t pin);
 void gpio_clear_pin(gpio_pin_t pin);
-void gpio_write(gpio_pin_t pin, bool val);
+void gpio_digital_write(gpio_pin_t pin, gpio_digital_t val);

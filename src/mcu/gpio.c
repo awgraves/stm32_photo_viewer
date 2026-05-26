@@ -42,6 +42,6 @@ void gpio_clear_pin(gpio_pin_t pin) {
   port->BSRR = (1U << (PINNO(pin) + 16));
 }
 
-void gpio_write(gpio_pin_t pin, bool val) {
+void gpio_digital_write(gpio_pin_t pin, gpio_digital_t val) {
   val ? gpio_set_pin(pin) : gpio_clear_pin(pin);
 }
