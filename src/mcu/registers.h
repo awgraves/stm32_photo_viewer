@@ -39,6 +39,8 @@ typedef struct {
 #define RCC ((RCC_t *const)RCC_BASE)
 // RM0390 pg.143
 #define AHB1ENR_GPIOA (BIT(0))
+#define AHB1ENR_DMA2 (BIT(22))
+
 // RM0390 pg. 148
 #define APB2ENR_SPI1 (BIT(12))
 
@@ -56,16 +58,49 @@ typedef struct {
 } SPI_t;
 
 // CR1
-#define SPI_ENABLE (BIT(6))
-#define SPI_MASTER (BIT(2))
-#define SPI_SSM (BIT(9))
-#define SPI_SSI (BIT(8))
+#define SPI_CR1_ENABLE (BIT(6))
+#define SPI_CR1_MASTER (BIT(2))
+#define SPI_CR1_SSM (BIT(9))
+#define SPI_CR1_SSI (BIT(8))
+
+// CR2
+#define SPI_CR2_TXDMAEN (BIT(1))
 
 // SR
-#define SPI_BSY (BIT(7))
-#define SPI_TXE (BIT(1))
-#define SPI_RXNE (BIT(0))
+#define SPI_SR_BSY (BIT(7))
+#define SPI_SR_TXE (BIT(1))
+#define SPI_SR_RXNE (BIT(0))
 
 // on APB2 bus
 #define SPI1_BASE (0x40013000UL)
 #define SPI1 ((SPI_t *const)SPI1_BASE)
+
+// pg. 231
+typedef struct {
+  volatile uint32_t CR, NDTR, PAR, M0AR, M1AR, FCR;
+} DMA_stream_t;
+
+// pg. 231
+typedef struct {
+  volatile uint32_t LISR, HISR, LIFCR, HIFCR;
+
+  DMA_stream_t STREAM[8];
+} DMA_t;
+
+// DMA_LISR pg. 222
+#define DMA_LISR_STREAM_3_TCIF (BIT(27)) // signals xfer complete
+
+// DMA_LIFCR pg. 224
+#define DMA_LIFCR_STREAM_3_ALL_FLAGS (0xFU << 24)
+
+// DMA_SxCR pg. 225
+#define DMA_SxCR_CHSEL_3 (3U << 25)
+// pg. 227
+#define DMA_SxCR_INCR_MEM (BIT(10))
+#define DMA_SxCR_DIR_MEM_TO_PERIPH (0x01U << 6)
+// pg. 228
+#define DMA_SxCR_EN (BIT(0)) // cleared by hardware when DMA end of xfer
+
+// pg. 58
+#define DMA2_BASE (0x40026400)
+#define DMA2 ((DMA_t *const)DMA2_BASE)
