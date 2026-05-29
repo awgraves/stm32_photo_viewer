@@ -6,7 +6,7 @@
 
 int main() {
 
-  sysclock_init(CPU_FREQ_32_MHZ);
+  sysclock_init(CPU_FREQ_40_MHZ);
   time_init();
 
   spi_config_t spi1_conf = {

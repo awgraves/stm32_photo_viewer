@@ -3,19 +3,51 @@
 
 static uint32_t cpu_hz;
 
+typedef struct {
+  uint32_t plln;
+  uint32_t pllp;
+  uint16_t flash_acr_latency;
+} config_t;
+
+const config_t mhz32 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_1,
+    .plln = RCC_PLLCFGR_PLLN(128),           // VCO becomes 128Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4) // 128 /4 = 32
+};
+
+const config_t mhz40 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_1,
+    .plln = RCC_PLLCFGR_PLLN(160),           // VCO becomes 128Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4) // 160 /4 = 40
+};
+
+const config_t mhz48 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_1,
+    .plln = RCC_PLLCFGR_PLLN(192),           // VCO becomes 192Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_2) // 192 / 4 = 48
+};
+
 /*
 See RM0390 pg 118 clock diagram
 */
 void sysclock_init(cpu_freq_t freq) {
   cpu_hz = freq;
 
-  if (freq == CPU_FREQ_16_MHZ)
-    // default HW setting on board reset
+  config_t const *config;
+  switch (freq) {
+  case CPU_FREQ_16_MHZ:
+    // hw defaults to this on board reset
     return;
-
-  /*
-    32MHZ CPU freq
-  */
+  case CPU_FREQ_32_MHZ:
+    config = &mhz32;
+    break;
+  case CPU_FREQ_40_MHZ:
+    config = &mhz40;
+    break;
+  case CPU_FREQ_48_MHZ:
+    config = &mhz48;
+    break;
+  }
 
   /*
    RM0393 pg. 66 - if clock speed is >30mhz on 3.3v range,
@@ -36,7 +68,7 @@ void sysclock_init(cpu_freq_t freq) {
    pg. 69 instruction cache memory enabled with ICEN in FLASH_ACR
   */
 
-  FLASH->ACR = (FLASH_ACR_LATENCY_1 | FLASH_ACR_PRFTEN | FLASH_ACR_ICEN);
+  FLASH->ACR = (config->flash_acr_latency | FLASH_ACR_PRFTEN | FLASH_ACR_ICEN);
   while (!(FLASH->ACR & FLASH_ACR_LATENCY_1))
     ;
 
@@ -56,7 +88,6 @@ void sysclock_init(cpu_freq_t freq) {
 
     PLLN: multiplication factor applied to VCO input.
     Output result must be between 100mhz and 432mhz
-    Going with 128, so VCO becomes 128Mhz
 
     PLLP: divisor of the VCO, options are limited to 2, 4, 6, 8
     Output result must not exceed 180Mhz
@@ -67,15 +98,14 @@ void sysclock_init(cpu_freq_t freq) {
     usb otg fs, sdio (not used, don't care right now) = VCO clock / PLLQ
   */
   // default source is set to HSI (PLLSRC bit set to 0)
-  RCC->PLLCFGR = (RCC_PLLCFGR_PLLM(16) | RCC_PLLCFGR_PLLN(128) |
-                  RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4));
+  RCC->PLLCFGR = (RCC_PLLCFGR_PLLM(16) | config->plln | config->pllp);
 
   RCC->CR |= RCC_CR_PLLON;
   while (!(RCC->CR & RCC_CR_PLLRDY))
     ;
 
   // RMO390 pg. 133
-  // switch over to 32MHZ PLL as sysclock source
+  // switch from HSI to PLL as sysclock source
   RCC->CFGR |= RCC_CFGR_SW(RCC_SRC_PLL);
   while (!(RCC->CFGR & RCC_CFGR_SW(RCC_SRC_PLL)))
     ;

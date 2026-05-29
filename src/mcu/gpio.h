@@ -35,8 +35,16 @@ typedef enum {
   GPIO_AF_SPI1 = 0x5,
 } gpio_af_t;
 
+typedef enum {
+  GPIO_SPEED_SLOW,
+  GPIO_SPEED_MEDIUM,
+  GPIO_SPEED_FAST,
+  GPIO_SPEED_HIGH
+} gpio_speed_t;
+
 void gpio_set_mode(gpio_pin_t pin, gpio_mode_t mode);
 void gpio_set_AF(gpio_pin_t pin, gpio_af_t af);
+void gpio_set_ospeed(gpio_pin_t pin, gpio_speed_t speed);
 
 void gpio_set_pin(gpio_pin_t pin);
 void gpio_clear_pin(gpio_pin_t pin);

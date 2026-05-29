@@ -32,6 +32,15 @@ void gpio_set_AF(gpio_pin_t pin, gpio_af_t af) {
   }
 }
 
+// when running higher CPU freq, sometimes need more aggressive signal change
+void gpio_set_ospeed(gpio_pin_t pin, gpio_speed_t speed) {
+  GPIO_t *port = PORT(pin);
+  uint8_t pinno = PINNO(pin);
+
+  port->OSPEEDER &= ~((0x3) << (2 * pinno));
+  port->OSPEEDER |= ((speed & 0x3) << (2 * pinno));
+}
+
 void gpio_set_pin(gpio_pin_t pin) {
   GPIO_t *port = PORT(pin);
   port->BSRR = (1U << PINNO(pin));
