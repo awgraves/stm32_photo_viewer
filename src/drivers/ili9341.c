@@ -68,20 +68,26 @@ void ili9341_init(ili9341_config_t *c) {
   end_tx();
 }
 
+#define UI_ROW_HEIGHT 20
+#define UI_ROW_COUNT (ILI9341_HEIGHT / UI_ROW_HEIGHT)
+#define UI_ROW_BUF_SIZE (ILI9341_WIDTH * UI_ROW_HEIGHT * 2)
+
+static uint8_t linebuf[UI_ROW_BUF_SIZE];
+
 void ili9341_fill(uint16_t color) {
   begin_tx();
 
   set_addr_window(0, 0, ILI9341_WIDTH - 1, ILI9341_HEIGHT - 1);
 
-  uint8_t linebuf[ILI9341_WIDTH * 2];
-  for (int x = 0; x < ILI9341_WIDTH; x++) {
+  for (int x = 0; x < UI_ROW_BUF_SIZE; x++) {
+    // due to endianness, must manually pack uint16 into uint8 stream
     linebuf[x * 2] = color >> 8;
     linebuf[x * 2 + 1] = color & 0xFF;
   }
 
   write_cmd(CMD_MEM_WRITE);
-  for (int y = 0; y < ILI9341_HEIGHT; y++) {
-    write_data_stream(linebuf, sizeof(linebuf));
+  for (int y = 0; y < UI_ROW_COUNT; y++) {
+    write_data_stream((uint8_t *)linebuf, sizeof(linebuf));
   }
 
   write_cmd(CMD_NOOP);

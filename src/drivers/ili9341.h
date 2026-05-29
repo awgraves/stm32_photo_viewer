@@ -8,8 +8,8 @@
 
 typedef enum {
   COLOR_RED = 0xF800,
-  COLOR_GREEN = 0x0FF0,
-  COLOR_BLUE = 0x008F
+  COLOR_GREEN = 0x07E0,
+  COLOR_BLUE = 0x001F
 } color_t;
 
 typedef struct {
