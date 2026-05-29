@@ -1,5 +1,6 @@
 #include "board/board.h"
 #include "drivers/ili9341.h"
+#include "graphics/renderer.h"
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
 #include "mcu/time.h"
@@ -18,11 +19,11 @@ int main() {
   ili9341_init(&lcd_c);
 
   while (1) {
-    ili9341_fill(COLOR_RED);
+    renderer_fill_screen(COLOR_RED);
     delay_ms(1000);
-    ili9341_fill(COLOR_GREEN);
+    renderer_fill_screen(COLOR_GREEN);
     delay_ms(1000);
-    ili9341_fill(COLOR_BLUE);
+    renderer_fill_screen(COLOR_BLUE);
     delay_ms(1000);
   }
 }

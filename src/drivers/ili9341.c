@@ -33,11 +33,10 @@ static void write_cmd(uint8_t cmd);
 static void write_data(uint8_t data);
 static void write_data_stream(const uint8_t stream[], uint16_t len);
 
-static void set_addr_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 static void hard_reset(void);
 
 /*
-  public functions
+  Public API
 */
 
 void ili9341_init(ili9341_config_t *c) {
@@ -68,29 +67,30 @@ void ili9341_init(ili9341_config_t *c) {
   end_tx();
 }
 
-#define UI_ROW_HEIGHT 20
-#define UI_ROW_COUNT (ILI9341_HEIGHT / UI_ROW_HEIGHT)
-#define UI_ROW_BUF_SIZE (ILI9341_WIDTH * UI_ROW_HEIGHT * 2)
-
-static uint8_t linebuf[UI_ROW_BUF_SIZE];
-
-void ili9341_fill(uint16_t color) {
+void ili9341_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   begin_tx();
 
-  set_addr_window(0, 0, ILI9341_WIDTH - 1, ILI9341_HEIGHT - 1);
+  write_cmd(CMD_COLUMN_ADDR_SET);
+  write_data(x0 >> 8);
+  write_data(x0 & 0xFF);
+  write_data(x1 >> 8);
+  write_data(x1 & 0xFF);
 
-  for (int x = 0; x < UI_ROW_BUF_SIZE; x++) {
-    // due to endianness, must manually pack uint16 into uint8 stream
-    linebuf[x * 2] = color >> 8;
-    linebuf[x * 2 + 1] = color & 0xFF;
-  }
+  write_cmd(CMD_PAGE_ADDR_SET);
+  write_data(y0 >> 8);
+  write_data(y0 & 0xFF);
+  write_data(y1 >> 8);
+  write_data(y1 & 0xFF);
 
+  end_tx();
+}
+
+// NOTE: assumes pixels are in big endian
+void ili9341_write_pixels(uint16_t *pixels, uint16_t count) {
+  begin_tx();
   write_cmd(CMD_MEM_WRITE);
-  for (int y = 0; y < UI_ROW_COUNT; y++) {
-    write_data_stream((uint8_t *)linebuf, sizeof(linebuf));
-  }
-
-  write_cmd(CMD_NOOP);
+  // SPI must operate in 8-bit mode although pixels must be 16bits.
+  write_data_stream((uint8_t *)pixels, count * 2);
   end_tx();
 }
 
@@ -119,20 +119,4 @@ static void write_data(uint8_t data) {
 static void write_data_stream(const uint8_t stream[], uint16_t len) {
   gpio_set_pin(io.dc);
   spi_tx(io.spi, stream, len);
-}
-
-static void set_addr_window(uint16_t x0, uint16_t y0, uint16_t x1,
-                            uint16_t y1) {
-
-  write_cmd(CMD_COLUMN_ADDR_SET);
-  write_data(x0 >> 8);
-  write_data(x0 & 0xFF);
-  write_data(x1 >> 8);
-  write_data(x1 & 0xFF);
-
-  write_cmd(CMD_PAGE_ADDR_SET);
-  write_data(y0 >> 8);
-  write_data(y0 & 0xFF);
-  write_data(y1 >> 8);
-  write_data(y1 & 0xFF);
 }
