@@ -7,7 +7,7 @@
 // RM0390 pg. 171
 static inline void _gpio_enable_clock(GPIO_t *port) {
   if (port == GPIOA) {
-    RCC->AHB1ENR |= AHB1ENR_GPIOA;
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOA;
   }
 }
 

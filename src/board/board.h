@@ -1,6 +1,5 @@
 #pragma once
 #include "mcu/gpio.h"
-#include "mcu/spi.h"
 
 #define LCD_SPI_SCK (PA5)
 #define LCD_SPI_MOSI (PA7)

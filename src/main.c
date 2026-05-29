@@ -1,9 +1,12 @@
 #include "board/board.h"
 #include "drivers/ili9341.h"
 #include "mcu/spi.h"
+#include "mcu/sysclock.h"
 #include "mcu/time.h"
 
 int main() {
+
+  sysclock_init(CPU_FREQ_32_MHZ);
   time_init();
 
   spi_config_t spi1_conf = {

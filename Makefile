@@ -21,6 +21,7 @@ LDFLAGS=-mcpu=cortex-m4 -mthumb \
 # Files to Process
 #
 SOURCES = mcu/startup.c \
+					mcu/sysclock.c \
 					mcu/time.c \
 					mcu/gpio.c \
 					mcu/spi.c \

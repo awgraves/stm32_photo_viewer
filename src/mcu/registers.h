@@ -4,10 +4,8 @@
 
 #define BIT(n) (1U << (n))
 
-#define CPU_FREQ_HZ (16000000UL)
-#define CPU_TICKS_PER_MS (CPU_FREQ_HZ / 1000)
 /*
-   Systick info comes from Arm Cortex M4 general user guid pg. 249
+   Systick info comes from Arm Cortex M4 general user guide pg. 249
 
    For SYS_CRS values:
    bit 2 set: set clock source as internal CPU clock
@@ -26,23 +24,50 @@ typedef struct {
 
 #define SYSTICK ((SYSTICK_t *const)SYSTICK_BASE)
 
-// RM0390 pg. 57
-#define RCC_BASE (0x40023800UL)
-#define GPIOA_BASE (0x40020000UL)
-
 // RM0390 pg. 170
 typedef struct {
-  volatile uint32_t _unused_1[12], AHB1ENR, _unused_2[4], APB2ENR,
-      _unused_3[20];
+  volatile uint32_t CR, PLLCFGR, CFGR, _unused_1[9], AHB1ENR, _unused_2[4],
+      APB2ENR, _unused_3[20];
 } RCC_t;
 
+// RM0390 pg. 57
+#define RCC_BASE (0x40023800UL)
 #define RCC ((RCC_t *const)RCC_BASE)
+
+// RM0390 pg. 127 - 128
+#define RCC_CR_PLLRDY (BIT(25))
+#define RCC_CR_PLLON (BIT(24))
+#define RCC_CR_HSIRDY (BIT(1))
+#define RCC_CR_HSION (BIT(0))
+
+typedef enum { RCC_PLLP_DIV_2, RCC_PLLP_DIV_4 } PLLP_divisor_t;
+#define RCC_PLLCFGR_PLLP(divisor) ((divisor & 0x1) << 16)
+#define RCC_PLLCFGR_PLLN(multiplier) ((multiplier & 0x1FF) << 6)
+#define RCC_PLLCFGR_PLLM(divisor) ((divisor & 0x3F) << 0)
+
+// RM0390 pg. 132
+typedef enum { RCC_SRC_HSI, RCC_SRC_HSE, RCC_SRC_PLL, RCC_SRC_PLLR } rcc_src_t;
+#define RCC_CFGR_SWS(src) ((src & 0x3) << 2)
+#define RCC_CFGR_SW(src) ((src & 0x3) << 0)
+
 // RM0390 pg.143
-#define AHB1ENR_GPIOA (BIT(0))
-#define AHB1ENR_DMA2 (BIT(22))
+#define RCC_AHB1ENR_GPIOA (BIT(0))
+#define RCC_AHB1ENR_DMA2 (BIT(22))
 
 // RM0390 pg. 148
-#define APB2ENR_SPI1 (BIT(12))
+#define RCC_APB2ENR_SPI1 (BIT(12))
+
+// pg. 87
+typedef struct {
+  volatile uint32_t ACR, KEYR, OPTKEYR, SR, CR, OPTCR;
+} FLASH_t;
+
+#define FLASH_BASE (0x40023C00UL)
+#define FLASH ((FLASH_t *const)FLASH_BASE)
+
+#define FLASH_ACR_ICEN (BIT(9))
+#define FLASH_ACR_PRFTEN (BIT(8))
+#define FLASH_ACR_LATENCY_1 ((0x1 & 0xF) << 0)
 
 // RM0390 pg. 191
 typedef struct {
@@ -50,6 +75,7 @@ typedef struct {
       AFRH;
 } GPIO_t;
 
+#define GPIOA_BASE (0x40020000UL)
 #define GPIOA ((GPIO_t *const)GPIOA_BASE)
 
 // SPI register map RM0390 pg. 874

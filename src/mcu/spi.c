@@ -38,7 +38,7 @@ spi_t spi1 = {.regs = SPI1,
 
 static inline void spi_clock_enable(spi_t *spi) {
   if (spi->regs == SPI1)
-    RCC->APB2ENR |= APB2ENR_SPI1;
+    RCC->APB2ENR |= RCC_APB2ENR_SPI1;
 }
 
 static void spi_dma_init(spi_t *spi);
@@ -64,7 +64,7 @@ void spi_init(spi_t *spi, spi_config_t *c) {
 
 static inline void dma_clock_enable(dma_t *dma) {
   if (dma->regs == DMA2)
-    RCC->AHB1ENR |= AHB1ENR_DMA2;
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA2;
 }
 
 static inline DMA_stream_t *dma_get_tx_stream(dma_t *dma) {
