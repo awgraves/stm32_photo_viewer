@@ -20,18 +20,17 @@
 #define MADCTL_MX (1U << 6)
 #define MADCTL_MV (1U << 5)
 #define MADCTL_BGR (1U << 3)
-#define PARAMS_MADCTL ((MADCTL_MV | MADCTL_BGR) & 0xFF)
+#define PARAMS_MADCTL ((MADCTL_BGR | MADCTL_MV) & 0xFF)
 
 #define CMD_MEM_WRITE 0x2C
 
 static ili9341_config_t io;
 
-static inline void begin_tx(void) { gpio_clear_pin(io.cs); }
-static inline void end_tx(void) { gpio_set_pin(io.cs); }
+void begin_tx(void) { gpio_clear_pin(io.cs); }
+void end_tx(void) { gpio_set_pin(io.cs); }
 
 static void write_cmd(uint8_t cmd);
-static void write_data(uint8_t data);
-static void write_data_stream(const uint8_t stream[], uint16_t len);
+static void write_param(uint8_t data);
 
 static void hard_reset(void);
 
@@ -58,10 +57,10 @@ void ili9341_init(ili9341_config_t *c) {
   delay_ms(5); // pg. 101
 
   write_cmd(CMD_PIXEL_FORMAT_SET);
-  write_data(PARAM_16_BIT_COLOR);
+  write_param(PARAM_16_BIT_COLOR);
 
   write_cmd(CMD_MEM_ACCESS_CTL);
-  write_data(PARAMS_MADCTL);
+  write_param(PARAMS_MADCTL);
 
   write_cmd(CMD_DISPLAY_ON);
   end_tx();
@@ -71,27 +70,34 @@ void ili9341_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   begin_tx();
 
   write_cmd(CMD_COLUMN_ADDR_SET);
-  write_data(x0 >> 8);
-  write_data(x0 & 0xFF);
-  write_data(x1 >> 8);
-  write_data(x1 & 0xFF);
+  write_param(x0 >> 8);
+  write_param(x0 & 0xFF);
+  write_param(x1 >> 8);
+  write_param(x1 & 0xFF);
 
   write_cmd(CMD_PAGE_ADDR_SET);
-  write_data(y0 >> 8);
-  write_data(y0 & 0xFF);
-  write_data(y1 >> 8);
-  write_data(y1 & 0xFF);
+  write_param(y0 >> 8);
+  write_param(y0 & 0xFF);
+  write_param(y1 >> 8);
+  write_param(y1 & 0xFF);
 
   end_tx();
 }
 
-// NOTE: assumes pixels are in big endian
-void ili9341_write_pixels(uint16_t *pixels, uint16_t count) {
+void ili9341_pixel_stream_begin(void) {
   begin_tx();
   write_cmd(CMD_MEM_WRITE);
-  // SPI must operate in 8-bit mode although pixels must be 16bits.
-  write_data_stream((uint8_t *)pixels, count * 2);
+  gpio_set_pin(io.dc);
+}
+
+void ili9341_pixel_stream_end(void) {
+  write_cmd(CMD_NOOP);
   end_tx();
+}
+
+void ili9341_pixel_stream_write(uint16_t *pixels, uint16_t count) {
+  // SPI must operate in 8-bit mode although pixels must be 16bits.
+  spi_tx(io.spi, (uint8_t *)pixels, count * 2);
 }
 
 /*
@@ -111,12 +117,7 @@ static void write_cmd(uint8_t cmd) {
   spi_tx(io.spi, &cmd, 1);
 }
 
-static void write_data(uint8_t data) {
+static void write_param(uint8_t data) {
   gpio_set_pin(io.dc);
   spi_tx(io.spi, &data, 1);
-}
-
-static void write_data_stream(const uint8_t stream[], uint16_t len) {
-  gpio_set_pin(io.dc);
-  spi_tx(io.spi, stream, len);
 }
