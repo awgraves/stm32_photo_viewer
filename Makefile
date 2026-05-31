@@ -27,6 +27,7 @@ SOURCES = mcu/startup.c \
 					mcu/spi.c \
 					drivers/ili9341.c \
 					graphics/renderer.c \
+					assets/logo.c \
 					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)

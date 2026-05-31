@@ -1,3 +1,4 @@
+#include "assets/logo.h"
 #include "board/board.h"
 #include "drivers/ili9341.h"
 #include "graphics/renderer.h"
@@ -18,12 +19,11 @@ int main() {
       .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST};
   ili9341_init(&lcd_c);
 
+  renderer_fill_screen(COLOR_GREEN);
+  color_palette_t p = {COLOR_BLACK, COLOR_GREEN};
+  renderer_draw_indexed_bitmap(110, 70, &logo, p);
+
   while (1) {
-    renderer_fill_screen(COLOR_RED);
-    delay_ms(1000);
-    renderer_fill_screen(COLOR_GREEN);
-    delay_ms(1000);
-    renderer_fill_screen(COLOR_BLUE);
-    delay_ms(1000);
+    // do nothing
   }
 }
