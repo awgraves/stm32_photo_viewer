@@ -27,6 +27,7 @@ SOURCES = mcu/startup.c \
 					mcu/spi.c \
 					drivers/ili9341.c \
 					graphics/renderer.c \
+					graphics/font.c \
 					assets/logo.c \
 					main.c
 

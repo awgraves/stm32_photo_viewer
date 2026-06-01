@@ -18,13 +18,12 @@ void renderer_fill_screen(color_t color) {
   }
 }
 
-static inline uint16_t get_indexed_pixel(const indexed_bitmap_t *bm,
-                                         uint32_t pos,
+static inline uint16_t get_indexed_pixel(const uint8_t *bytes, uint32_t pos,
                                          const color_palette_t palette) {
   uint32_t byte = pos >> 3;
   uint32_t bit = pos & 0x7;
 
-  uint8_t pixel_index = (bm->pixels[byte] >> (7 - bit)) & 0x1;
+  uint8_t pixel_index = (bytes[byte] >> (7 - bit)) & 0x1;
 
   return palette[pixel_index];
 }
@@ -41,7 +40,7 @@ void renderer_draw_indexed_bitmap(uint16_t x, uint16_t y,
   ili9341_pixel_stream_begin();
   // loop through each byte and each bit, convert each to color bitmap
   while (pos < count) {
-    buff[buff_idx++] = get_indexed_pixel(bitmap, pos, palette);
+    buff[buff_idx++] = get_indexed_pixel(bitmap->pixels, pos, palette);
     if (buff_idx == BUFF_SIZE) {
       ili9341_pixel_stream_write(buff, buff_idx);
       buff_idx = 0;
@@ -54,4 +53,34 @@ void renderer_draw_indexed_bitmap(uint16_t x, uint16_t y,
   }
 
   ili9341_pixel_stream_end();
+}
+
+void renderer_draw_text(uint16_t x, uint16_t y, const char *text,
+                        const font_t *font, color_t fg, color_t bg) {
+
+  color_palette_t p = {fg, bg};
+
+  uint16_t runningX = x;
+  uint16_t runningY = y;
+
+  const char *bm;
+  uint32_t pix_count = font->height * font->width;
+
+  char c;
+  while ((c = *text++)) {
+    ili9341_set_window(runningX, runningY, (runningX + font->width - 1),
+                       (runningY + font->height - 1));
+
+    buff_idx = 0;
+    bm = &font->bitmaps[((c - ' ') * (pix_count >> 3))];
+    // assuming for now that num of pixels < buff size
+    for (uint32_t pos = 0; pos < pix_count; pos++) {
+      buff[buff_idx++] = get_indexed_pixel((const uint8_t *)bm, pos, p);
+    }
+    ili9341_pixel_stream_begin();
+    ili9341_pixel_stream_write(buff, buff_idx);
+    ili9341_pixel_stream_end();
+
+    runningX += font->width;
+  }
 }

@@ -19,9 +19,12 @@ int main() {
       .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST};
   ili9341_init(&lcd_c);
 
-  renderer_fill_screen(COLOR_GREEN);
-  color_palette_t p = {COLOR_BLACK, COLOR_GREEN};
-  renderer_draw_indexed_bitmap(110, 70, &logo, p);
+  renderer_fill_screen(COLOR_WHITE);
+  color_palette_t p = {COLOR_BLACK, COLOR_WHITE};
+  renderer_draw_indexed_bitmap(110, 55, &logo, p);
+
+  renderer_draw_text(117, 165, "AO Embedded", &kourier_16, COLOR_WHITE,
+                     COLOR_BLACK);
 
   while (1) {
     // do nothing
