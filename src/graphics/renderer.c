@@ -1,7 +1,7 @@
 #include "renderer.h"
 #include "drivers/ili9341.h"
 
-#define BUFF_SIZE (ILI9341_WIDTH_PIXELS * 20)
+#define BUFF_SIZE (ILI9341_WIDTH_PIXELS * 24)
 static uint16_t buff[BUFF_SIZE];
 static uint32_t buff_idx = 0;
 
@@ -58,21 +58,23 @@ void renderer_draw_indexed_bitmap(uint16_t x, uint16_t y,
 void renderer_draw_text(uint16_t x, uint16_t y, const char *text,
                         const font_t *font, color_t fg, color_t bg) {
 
-  color_palette_t p = {fg, bg};
+  color_palette_t p = {bg, fg};
 
   uint16_t runningX = x;
   uint16_t runningY = y;
 
   const char *bm;
-  uint32_t pix_count = font->height * font->width;
+  uint32_t bytes_per_row = (font->width_px) >> 3;
+  uint32_t bytes_per_glyph = font->height_px * bytes_per_row;
+  uint32_t pix_count = font->height_px * font->width_px;
 
   char c;
   while ((c = *text++)) {
-    ili9341_set_window(runningX, runningY, (runningX + font->width - 1),
-                       (runningY + font->height - 1));
+    ili9341_set_window(runningX, runningY, (runningX + font->width_px - 1),
+                       (runningY + font->height_px - 1));
 
     buff_idx = 0;
-    bm = &font->bitmaps[((c - ' ') * (pix_count >> 3))];
+    bm = &font->bitmaps[(c - ' ') * bytes_per_glyph];
     // assuming for now that num of pixels < buff size
     for (uint32_t pos = 0; pos < pix_count; pos++) {
       buff[buff_idx++] = get_indexed_pixel((const uint8_t *)bm, pos, p);
@@ -81,6 +83,6 @@ void renderer_draw_text(uint16_t x, uint16_t y, const char *text,
     ili9341_pixel_stream_write(buff, buff_idx);
     ili9341_pixel_stream_end();
 
-    runningX += font->width;
+    runningX += font->width_px;
   }
 }

@@ -29,6 +29,7 @@ SOURCES = mcu/startup.c \
 					graphics/renderer.c \
 					graphics/font.c \
 					assets/logo.c \
+					screens/splash.c \
 					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)

@@ -1,10 +1,9 @@
-#include "assets/logo.h"
 #include "board/board.h"
 #include "drivers/ili9341.h"
-#include "graphics/renderer.h"
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
 #include "mcu/time.h"
+#include "screens/splash.h"
 
 int main() {
 
@@ -19,12 +18,7 @@ int main() {
       .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST};
   ili9341_init(&lcd_c);
 
-  renderer_fill_screen(COLOR_WHITE);
-  color_palette_t p = {COLOR_BLACK, COLOR_WHITE};
-  renderer_draw_indexed_bitmap(110, 55, &logo, p);
-
-  renderer_draw_text(117, 165, "AO Embedded", &kourier_16, COLOR_WHITE,
-                     COLOR_BLACK);
+  screens_splash_show();
 
   while (1) {
     // do nothing
