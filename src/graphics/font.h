@@ -7,7 +7,7 @@
 typedef struct {
   uint8_t height_px;
   uint8_t width_px;
-  const char *bitmaps;
+  const uint8_t *bitmaps;
 } font_t;
 
 extern const font_t ibm_bios_16;

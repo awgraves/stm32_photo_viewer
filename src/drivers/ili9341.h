@@ -5,7 +5,8 @@
 
 #define ILI9341_HEIGHT_PIXELS (uint16_t)240
 #define ILI9341_WIDTH_PIXELS (uint16_t)320
-#define ILI9341_PIXEL_COUNT (ILI9341_WIDTH_PIXELS * ILI9341_HEIGHT_PIXELS)
+#define ILI9341_PIXEL_COUNT                                                    \
+  (uint32_t)(ILI9341_WIDTH_PIXELS * ILI9341_HEIGHT_PIXELS)
 
 typedef struct {
   spi_t *spi;

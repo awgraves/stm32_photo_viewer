@@ -7,20 +7,24 @@
 #define BLINK_MS 300
 #define TYPING_MS 25
 
+#define CURSOR_HEIGHT (ibm_bios_16.height_px + 4)
+#define CURSOR_WIDTH (ibm_bios_16.width_px - 2)
+#define CURSOR_Y 162
+
+static inline void render_cursor(uint16_t x, color_t color) {
+  renderer_draw_rect(x, CURSOR_Y, CURSOR_WIDTH, CURSOR_HEIGHT, color);
+}
+
 static void blink_cursor(uint16_t x, uint8_t times, bool hold) {
-  uint16_t cursor_height = ibm_bios_16.height_px + 4;
-  uint16_t cursor_width = ibm_bios_16.width_px;
   while (times-- > 0) {
-    renderer_draw_rect(x, 163, cursor_width - 2, cursor_height,
-                       COLOR_SPLASH_BLACK);
+    render_cursor(x, COLOR_SPLASH_BLACK);
     delay_ms(BLINK_MS);
-    renderer_draw_rect(x, 163, cursor_width, cursor_height, COLOR_WHITE);
+    render_cursor(x, COLOR_WHITE);
     delay_ms(BLINK_MS);
   }
 
   if (hold) {
-    renderer_draw_rect(x, 163, cursor_width - 2, cursor_height,
-                       COLOR_SPLASH_BLACK);
+    render_cursor(x, COLOR_SPLASH_BLACK);
   }
 }
 
