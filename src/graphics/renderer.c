@@ -18,8 +18,8 @@ void renderer_fill_screen(color_t color) {
   }
 }
 
-static inline uint16_t get_indexed_pixel(const uint8_t *bytes, uint32_t pos,
-                                         const color_palette_t palette) {
+static inline uint16_t get_1bd_indexed_pixel(const uint8_t *bytes, uint32_t pos,
+                                             const color_palette_t palette) {
   uint32_t byte = pos >> 3;
   uint32_t bit = pos & 0x7;
 
@@ -32,15 +32,40 @@ void renderer_draw_indexed_bitmap(uint16_t x, uint16_t y,
                                   const indexed_bitmap_t *bitmap,
                                   const color_palette_t palette) {
 
-  ili9341_set_window(x, y, x + bitmap->px_width - 1, y + bitmap->px_height - 1);
+  ili9341_set_window(x, y, x + bitmap->width_px - 1, y + bitmap->height_px - 1);
 
   buff_idx = 0;
-  uint32_t count = bitmap->px_height * bitmap->px_width;
+  uint32_t total_pixels = bitmap->height_px * bitmap->width_px;
   uint32_t pos = 0;
   ili9341_pixel_stream_begin();
   // loop through each byte and each bit, convert each to color bitmap
-  while (pos < count) {
-    buff[buff_idx++] = get_indexed_pixel(bitmap->pixels, pos, palette);
+  while (pos < total_pixels) {
+    buff[buff_idx++] = get_1bd_indexed_pixel(bitmap->pixels, pos, palette);
+    if (buff_idx == BUFF_SIZE) {
+      ili9341_pixel_stream_write(buff, buff_idx);
+      buff_idx = 0;
+    }
+    pos++;
+  }
+  // flush any left over
+  if (buff_idx > 0) {
+    ili9341_pixel_stream_write(buff, buff_idx);
+  }
+
+  ili9341_pixel_stream_end();
+}
+
+void renderer_draw_rgb565_bitmap(uint16_t x, uint16_t y,
+                                 const rgb565_bitmap_t *bitmap) {
+
+  ili9341_set_window(x, y, x + bitmap->width_px - 1, y + bitmap->height_px - 1);
+
+  buff_idx = 0;
+  uint32_t total_pixels = bitmap->height_px * bitmap->width_px;
+  uint32_t pos = 0;
+  ili9341_pixel_stream_begin();
+  while (pos < total_pixels) {
+    buff[buff_idx++] = bitmap->pixels[pos];
     if (buff_idx == BUFF_SIZE) {
       ili9341_pixel_stream_write(buff, buff_idx);
       buff_idx = 0;
@@ -77,7 +102,7 @@ void renderer_draw_text(uint16_t x, uint16_t y, const char *text,
     bm = &font->bitmaps[(c - ' ') * bytes_per_glyph];
     // assuming for now that num of pixels < buff size
     for (uint32_t pos = 0; pos < pix_count; pos++) {
-      buff[buff_idx++] = get_indexed_pixel((const uint8_t *)bm, pos, p);
+      buff[buff_idx++] = get_1bd_indexed_pixel((const uint8_t *)bm, pos, p);
     }
     ili9341_pixel_stream_begin();
     ili9341_pixel_stream_write(buff, buff_idx);
