@@ -1,5 +1,7 @@
 #include "splash.h"
-#include "assets/splash_logo.h"
+#include "assets/fonts/ibm_bios_16.h"
+#include "assets/fonts/terminus_bold_16.h"
+#include "assets/logos/splash_logo.h"
 #include "graphics/renderer.h"
 #include "mcu/time.h"
 #include <stdbool.h>

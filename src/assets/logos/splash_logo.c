@@ -1,5 +1,10 @@
 #include "splash_logo.h"
 
+/*
+Thank you to https://notisrac.github.io/FileToCArray/
+for making this easy.
+*/
+
 static const uint16_t logo_pixels[];
 
 const rgb565_bitmap_t splash_logo = {

@@ -27,8 +27,9 @@ SOURCES = mcu/startup.c \
 					mcu/spi.c \
 					drivers/ili9341.c \
 					graphics/renderer.c \
-					graphics/font.c \
-					assets/splash_logo.c \
+					assets/logos/splash_logo.c \
+					assets/fonts/ibm_bios_16.c \
+					assets/fonts/terminus_bold_16.c \
 					screens/splash.c \
 					main.c
 
