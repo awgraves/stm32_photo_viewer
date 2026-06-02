@@ -95,7 +95,7 @@ void ili9341_pixel_stream_end(void) {
   end_tx();
 }
 
-void ili9341_pixel_stream_write(uint16_t *pixels, uint16_t count) {
+void ili9341_pixel_stream_write(const uint16_t *pixels, uint16_t count) {
   // SPI must operate in 8-bit mode although pixels must be 16bits.
   spi_tx(io.spi, (uint8_t *)pixels, count * 2);
 }

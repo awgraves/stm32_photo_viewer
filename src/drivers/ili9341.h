@@ -20,5 +20,5 @@ void ili9341_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 
 void ili9341_pixel_stream_begin(void);
 // NOTE: pixel_stream is assumed to be in big endian
-void ili9341_pixel_stream_write(uint16_t *pixels, uint16_t count);
+void ili9341_pixel_stream_write(const uint16_t *pixels, uint16_t count);
 void ili9341_pixel_stream_end(void);

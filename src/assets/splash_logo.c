@@ -7,7 +7,8 @@ const rgb565_bitmap_t splash_logo = {
     .width_px = 120,
     .pixels = logo_pixels,
 };
-// array size is 28800
+// array size is 28800 stored BIG endian
+// so in expected MSB format across SPI wire to ili9341
 static const uint16_t logo_pixels[] = {
     0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,
     0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff,

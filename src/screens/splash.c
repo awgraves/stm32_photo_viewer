@@ -1,15 +1,49 @@
 #include "splash.h"
 #include "assets/splash_logo.h"
 #include "graphics/renderer.h"
+#include "mcu/time.h"
+#include <stdbool.h>
+
+#define BLINK_MS 300
+#define TYPING_MS 25
+
+static void blink_cursor(uint16_t x, uint8_t times, bool hold) {
+  uint16_t cursor_height = ibm_bios_16.height_px + 4;
+  uint16_t cursor_width = ibm_bios_16.width_px;
+  while (times-- > 0) {
+    renderer_draw_rect(x, 163, cursor_width - 2, cursor_height,
+                       COLOR_SPLASH_BLACK);
+    delay_ms(BLINK_MS);
+    renderer_draw_rect(x, 163, cursor_width, cursor_height, COLOR_WHITE);
+    delay_ms(BLINK_MS);
+  }
+
+  if (hold) {
+    renderer_draw_rect(x, 163, cursor_width - 2, cursor_height,
+                       COLOR_SPLASH_BLACK);
+  }
+}
 
 void screens_splash_show(void) {
   renderer_fill_screen(COLOR_WHITE);
-  // color_palette_t p = {COLOR_BLACK, COLOR_WHITE};
+
   renderer_draw_rgb565_bitmap(100, 30, &splash_logo);
 
-  renderer_draw_text(72, 165, "AO Embedded", &ibm_bios_16, COLOR_BLACK,
-                     COLOR_WHITE);
+  uint16_t runningX = 72;
+  blink_cursor(runningX, 2, false);
 
-  renderer_draw_text(104, 205, "Copyright 2026", &terminus_bold_16, COLOR_BLACK,
-                     COLOR_WHITE);
+  const char *text = "AO Embedded";
+  const char *p = text;
+  while (*p) {
+    renderer_draw_char(runningX, 165, *p, &ibm_bios_16, COLOR_SPLASH_BLACK,
+                       COLOR_WHITE);
+    runningX += ibm_bios_16.width_px;
+    p++;
+    delay_ms(TYPING_MS);
+  }
+
+  renderer_draw_text(104, 205, "Copyright 2026", &terminus_bold_16,
+                     COLOR_SPLASH_GREY, COLOR_WHITE);
+
+  blink_cursor(runningX, 3, true);
 }
