@@ -3,6 +3,7 @@
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
 #include "mcu/time.h"
+#include "screens/menu.h"
 #include "screens/splash.h"
 
 int main() {
@@ -19,6 +20,7 @@ int main() {
   ili9341_init(&lcd_c);
 
   screens_splash_show();
+  screens_menu_show();
 
   while (1) {
     // do nothing
