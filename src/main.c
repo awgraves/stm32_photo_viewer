@@ -19,10 +19,20 @@ int main() {
       .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST};
   ili9341_init(&lcd_c);
 
-  screens_splash_show();
-  screens_menu_show();
+  splash_show();
+  menu_show();
+
+  int8_t idx = 0;
 
   while (1) {
     // do nothing
+    while (++idx <= 8) {
+      delay_ms(300);
+      menu_move_down();
+    }
+    while (--idx >= 0) {
+      delay_ms(300);
+      menu_move_up();
+    }
   }
 }

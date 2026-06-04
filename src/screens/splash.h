@@ -1,3 +1,3 @@
 #pragma once
 
-void screens_splash_show(void);
+void splash_show(void);

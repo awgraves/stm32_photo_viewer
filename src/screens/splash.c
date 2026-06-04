@@ -30,7 +30,7 @@ static void blink_cursor(uint16_t x, uint8_t times, bool hold) {
   }
 }
 
-void screens_splash_show(void) {
+void splash_show(void) {
   renderer_fill_screen(COLOR_WHITE);
 
   renderer_draw_rgb565_bitmap(100, 30, &splash_logo);
