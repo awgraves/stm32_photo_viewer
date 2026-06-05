@@ -1,3 +1,4 @@
+#include "menu.h"
 #include "assets/fonts/ibm_bios_16.h"
 #include "assets/fonts/terminus_bold_16.h"
 #include "graphics/renderer.h"
@@ -39,6 +40,36 @@ static menu_state_t menu_state = {
                   "more_again.bmp", "eight_is_great.bmp",
                   "number_nine_number_nine.bmp", "wow_so_many_files.bmp"}};
 
+static void menu_draw(void);
+
+static void menu_move_up(void);
+static void menu_move_down(void);
+
+/*
+ Public API
+*/
+
+void menu_show(void) {
+  menu_state.selected_idx = 0;
+  menu_draw();
+}
+
+void menu_handle_event(input_event_t event) {
+  switch (event) {
+  case INPUT_EVENT_ENCODER_CW:
+    menu_move_down();
+    break;
+  case INPUT_EVENT_ENCODER_CCW:
+    menu_move_up();
+  default:
+    break;
+  }
+}
+
+/*
+  Helpers
+*/
+
 static inline void menu_draw_window(void) {
   renderer_fill_screen(BG_COLOR);
 
@@ -73,12 +104,7 @@ static void menu_draw(void) {
     menu_draw_row(i);
 }
 
-void menu_show(void) {
-  menu_state.selected_idx = 0;
-  menu_draw();
-}
-
-void menu_move_up(void) {
+static void menu_move_up(void) {
   if (menu_state.selected_idx > 0) {
     uint16_t old = menu_state.selected_idx;
     menu_state.selected_idx--;
@@ -87,7 +113,7 @@ void menu_move_up(void) {
   }
 }
 
-void menu_move_down(void) {
+static void menu_move_down(void) {
   if (menu_state.selected_idx < menu_state.file_count - 1) {
     uint16_t old = menu_state.selected_idx;
     menu_state.selected_idx++;

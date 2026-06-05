@@ -1,10 +1,19 @@
 #include "board/board.h"
 #include "drivers/ili9341.h"
+#include "input/event_queue.h"
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
 #include "mcu/time.h"
 #include "screens/menu.h"
 #include "screens/splash.h"
+
+void process_loop(void) {
+  input_event_t event;
+  while (event_queue_pop(&event)) {
+    menu_handle_event(event);
+    delay_ms(300);
+  }
+}
 
 int main() {
 
@@ -27,12 +36,15 @@ int main() {
   while (1) {
     // do nothing
     while (++idx <= 8) {
-      delay_ms(300);
-      menu_move_down();
+      event_queue_push(INPUT_EVENT_ENCODER_CW);
     }
+
+    process_loop();
+
     while (--idx >= 0) {
-      delay_ms(300);
-      menu_move_up();
+      event_queue_push(INPUT_EVENT_ENCODER_CCW);
     }
+
+    process_loop();
   }
 }

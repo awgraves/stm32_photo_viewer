@@ -32,6 +32,7 @@ SOURCES = mcu/startup.c \
 					assets/fonts/terminus_bold_16.c \
 					screens/splash.c \
 					screens/menu.c \
+					input/event_queue.c \
 					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)
