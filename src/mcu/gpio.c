@@ -1,7 +1,6 @@
 #include "gpio.h"
 #include "registers.h"
 
-#define PINNO(enum_val) (enum_val & 0xFU)
 #define PORT(enum_val) (GPIO_t *)(((enum_val >> 4) * sizeof(GPIO_t)) + GPIOA)
 
 // RM0390 pg. 171
@@ -41,6 +40,14 @@ void gpio_set_ospeed(gpio_pin_t pin, gpio_speed_t speed) {
   port->OSPEEDER |= ((speed & 0x3) << (2 * pinno));
 }
 
+void gpio_set_pupd(gpio_pin_t pin, gpio_pupdr_t pupdr) {
+  GPIO_t *port = PORT(pin);
+  uint8_t pinno = PINNO(pin);
+
+  port->PUPDR &= ~((0x3) << (2 * pinno));
+  port->PUPDR |= ((pupdr & 0x3) << (2 * pinno));
+}
+
 void gpio_set_pin(gpio_pin_t pin) {
   GPIO_t *port = PORT(pin);
   port->BSRR = (1U << PINNO(pin));
@@ -53,4 +60,11 @@ void gpio_clear_pin(gpio_pin_t pin) {
 
 void gpio_digital_write(gpio_pin_t pin, gpio_digital_t val) {
   val ? gpio_set_pin(pin) : gpio_clear_pin(pin);
+}
+
+gpio_digital_t gpio_digital_read(gpio_pin_t pin) {
+  GPIO_t *port = PORT(pin);
+  uint8_t pinno = PINNO(pin);
+
+  return port->IDR & (BIT(pinno)) ? HIGH : LOW;
 }

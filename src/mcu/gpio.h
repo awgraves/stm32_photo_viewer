@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 
+#define PINNO(enum_val) (enum_val & 0xFU)
+
 typedef enum {
   PA0 = 0x00,
   PA1 = 0X01,
@@ -42,10 +44,20 @@ typedef enum {
   GPIO_SPEED_HIGH
 } gpio_speed_t;
 
+// RM0390 pg. 186
+typedef enum {
+  GPIO_PUPD_NONE,
+  GPIO_PUPD_PULL_UP,
+  GPIO_PUPD_PULL_DOWN,
+} gpio_pupdr_t;
+
 void gpio_set_mode(gpio_pin_t pin, gpio_mode_t mode);
 void gpio_set_AF(gpio_pin_t pin, gpio_af_t af);
 void gpio_set_ospeed(gpio_pin_t pin, gpio_speed_t speed);
+void gpio_set_pupd(gpio_pin_t pin, gpio_pupdr_t pupdr);
 
 void gpio_set_pin(gpio_pin_t pin);
 void gpio_clear_pin(gpio_pin_t pin);
 void gpio_digital_write(gpio_pin_t pin, gpio_digital_t val);
+
+gpio_digital_t gpio_digital_read(gpio_pin_t pin);

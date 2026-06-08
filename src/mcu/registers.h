@@ -56,8 +56,9 @@ typedef enum { RCC_SRC_HSI, RCC_SRC_HSE, RCC_SRC_PLL, RCC_SRC_PLLR } rcc_src_t;
 
 // RM0390 pg. 148
 #define RCC_APB2ENR_SPI1 (BIT(12))
+#define RCC_APB2ENR_SYSCFG (BIT(14))
 
-// pg. 87
+// RM0390 pg. 87
 typedef struct {
   volatile uint32_t ACR, KEYR, OPTKEYR, SR, CR, OPTCR;
 } FLASH_t;
@@ -101,12 +102,12 @@ typedef struct {
 #define SPI1_BASE (0x40013000UL)
 #define SPI1 ((SPI_t *const)SPI1_BASE)
 
-// pg. 231
+// RM0390 pg. 231
 typedef struct {
   volatile uint32_t CR, NDTR, PAR, M0AR, M1AR, FCR;
 } DMA_stream_t;
 
-// pg. 231
+// RM0390 pg. 231
 typedef struct {
   volatile uint32_t LISR, HISR, LIFCR, HIFCR;
 
@@ -130,3 +131,44 @@ typedef struct {
 // pg. 58
 #define DMA2_BASE (0x40026400)
 #define DMA2 ((DMA_t *const)DMA2_BASE)
+
+// pg. 246
+typedef struct {
+  volatile uint32_t IMR, EMR, RTSR, FTSR, SWIER, PR;
+} EXTI_t;
+
+// pg. 58
+#define EXTI_BASE (0x40013C00UL)
+#define EXTI ((EXTI_t *const)EXTI_BASE)
+
+// pg. 199
+typedef struct {
+  volatile uint32_t MEMRMP, PMC, EXTICR[4], CMPCR, CFGR;
+} SYSCFG_t;
+
+// pg. 58
+#define SYSCF_BASE (0x40013800UL)
+#define SYSCF ((SYSCFG_t *const)SYSCF_BASE)
+
+// pg. 195
+#define SYSCFG_EXTI_INPUT_PA 0x0000U
+#define SYSCFG_EXTI_INPUT_MASK(exti_pos, input) ((input) << (exti_pos * 4))
+
+/*
+ARM Cortex M4 general user manual pg. 233
+*/
+typedef struct {
+  volatile uint32_t ISER; // 'Interrupt set-enable registers'
+  // ... more registers exist, but not using them.
+  /*
+  Note: just need ISER 0.
+  In RM 0390 pg. 236, the ISER bit to set corresponds to the 'position' col
+  for EXTI0 - EXTI4, these are 6 - 10 respectively
+  */
+} NVIC_t;
+
+// NOTE: this will break if pinno > 4
+#define NVIC_EXTI_BIT_FROM_PINNO(pinno) (BIT(pinno + 6))
+
+#define NVIC_BASE 0xE000E100UL
+#define NVIC ((NVIC_t *const)NVIC_BASE)
