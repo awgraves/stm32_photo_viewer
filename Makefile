@@ -25,7 +25,9 @@ SOURCES = mcu/startup.c \
 					mcu/time.c \
 					mcu/gpio.c \
 					mcu/spi.c \
+					mcu/exti.c \
 					drivers/ili9341.c \
+					drivers/rotary_encoder.c \
 					graphics/renderer.c \
 					assets/logos/splash_logo.c \
 					assets/fonts/ibm_bios_16.c \
