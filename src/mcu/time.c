@@ -19,3 +19,5 @@ void delay_ms(uint32_t ms) {
   while (systicks - now < ms)
     ;
 }
+
+uint32_t millis(void) { return systicks; }
