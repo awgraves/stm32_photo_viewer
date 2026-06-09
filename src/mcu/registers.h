@@ -26,8 +26,8 @@ typedef struct {
 
 // RM0390 pg. 170
 typedef struct {
-  volatile uint32_t CR, PLLCFGR, CFGR, _unused_1[9], AHB1ENR, _unused_2[4],
-      APB2ENR, _unused_3[20];
+  volatile uint32_t CR, PLLCFGR, CFGR, _unused_1[9], AHB1ENR, _unused_2[3],
+      APB1ENR, APB2ENR, _unused_3[20];
 } RCC_t;
 
 // RM0390 pg. 57
@@ -53,6 +53,9 @@ typedef enum { RCC_SRC_HSI, RCC_SRC_HSE, RCC_SRC_PLL, RCC_SRC_PLLR } rcc_src_t;
 // RM0390 pg.143
 #define RCC_AHB1ENR_GPIOA (BIT(0))
 #define RCC_AHB1ENR_DMA2 (BIT(22))
+
+// RM0390 pg. 146
+#define RCC_APB1ENR_TIM2 (BIT(0))
 
 // RM0390 pg. 148
 #define RCC_APB2ENR_SPI1 (BIT(12))
@@ -172,3 +175,27 @@ typedef struct {
 
 #define NVIC_BASE 0xE000E100UL
 #define NVIC ((NVIC_t *const)NVIC_BASE)
+
+// RM 0390 pg. 569
+typedef struct {
+  volatile uint32_t CR1, CR2, SMCR, DIER, SR, EGR, CCMR1, CCMR2, CCER, CNT, PSC,
+      ARR, CCR1, CCR2, CCR3, CCR4, DCR, DMAR, OR;
+} TIM_t;
+
+// RM 0390 pg. 59, on APB1 bus
+#define TIM2_BASE (0x40000000UL)
+#define TIM2 ((TIM_t *const)TIM2_BASE)
+
+// RM0390 pg. 548 (control reg1)
+#define TIMx_CR1_CEN (BIT(0))
+// RM0390 pg. 552 (slave mode control)
+#define TIMx_SMCR_SMS_T1_EDGE (0x2U)
+// RM0390 pg. 557 - 558 (capture/compare mode register)
+// input capture 1 and 2 filters
+#define TIMx_CCMR1_IC2F_4_SAMPLES ((0x2) << 12)
+#define TIMx_CCMR1_IC1F_4_SAMPLES ((0x2) << 4)
+// RM0390 pg. 562 (capture/compare enable)
+#define TIMx_CCER_CC1_ACTIVE_LOW (BIT(1))
+#define TIMx_CCER_CC2_ACTIVE_LOW (BIT(5))
+#define TIMx_CCER_CC1_EN (BIT(0))
+#define TIMx_CCER_CC2_EN (BIT(4))

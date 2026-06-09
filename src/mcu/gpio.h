@@ -32,9 +32,10 @@ typedef enum {
   GPIO_MODE_ANALOG,
 } gpio_mode_t;
 
-// RM0390 pg. 58
+// RM0390 pg. 178
 typedef enum {
-  GPIO_AF_SPI1 = 0x5,
+  GPIO_AF_TIM2 = 0x1U,
+  GPIO_AF_SPI1 = 0x5U,
 } gpio_af_t;
 
 typedef enum {
