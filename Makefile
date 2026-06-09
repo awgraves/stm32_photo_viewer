@@ -28,6 +28,7 @@ SOURCES = mcu/startup.c \
 					mcu/spi.c \
 					drivers/ili9341.c \
 					drivers/rotary_encoder.c \
+					board/board.c \
 					graphics/renderer.c \
 					assets/logos/splash_logo.c \
 					assets/fonts/ibm_bios_16.c \
