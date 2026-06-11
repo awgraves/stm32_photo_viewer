@@ -1,11 +1,9 @@
 #include "menu.h"
 #include "assets/fonts/ibm_bios_16.h"
 #include "assets/fonts/terminus_bold_16.h"
+#include "common_colors.h"
 #include "graphics/renderer.h"
 #include <stdbool.h>
-
-#define TEXT_COLOR COLOR_WHITE
-#define BG_COLOR COLOR_BLUE_ALT
 
 #define WINDOW_OUTER_X_START 19
 #define WINDOW_OUTER_Y_START 19

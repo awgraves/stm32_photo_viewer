@@ -1,6 +1,7 @@
 #include "board.h"
 #include "drivers/ili9341.h"
 #include "drivers/rotary_encoder.h"
+#include "drivers/sd_card.h"
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
 #include "mcu/time.h"
@@ -22,7 +23,7 @@
 #define SDIO_D3 PC11
 #define SDIO_CLK PC12
 #define SDIO_CMD PD2
-#define SDIO_DET PC6
+#define SD_DET PC6
 
 void board_init(void) {
   sysclock_init(CPU_FREQ_40_MHZ);
@@ -44,4 +45,9 @@ void board_init(void) {
                                       .enc_af = GPIO_AF_TIM2,
                                       .timer = &timer2};
   rotary_encoder_init(&rot_conf);
+
+  sd_card_config_t sd_conf = {
+      .det = SD_DET,
+  };
+  sd_card_init(&sd_conf);
 }
