@@ -15,6 +15,15 @@
 #define ENC_B PA1 // TIM2_CH2 AF
 #define ENC_CENTER PA4
 
+// datasheet AF table pg. 59-60
+#define SDIO_D0 PC8
+#define SDIO_D1 PC9
+#define SDIO_D2 PC10
+#define SDIO_D3 PC11
+#define SDIO_CLK PC12
+#define SDIO_CMD PD2
+#define SDIO_DET PC6
+
 void board_init(void) {
   sysclock_init(CPU_FREQ_40_MHZ);
   time_init();

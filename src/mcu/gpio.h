@@ -3,23 +3,65 @@
 
 #define PINNO(enum_val) (enum_val & 0xFU)
 
+/*
+   Using an enum bit shift trick here.
+   Each single byte enum val holds upper nibble 4 bits to represent port
+   and lower nibble 4 bits to represent the pinno within that port.
+
+   This works out nicely for hex increments.
+*/
 typedef enum {
-  PA0 = 0x00,
-  PA1 = 0X01,
-  PA2 = 0x02,
-  PA3 = 0x03,
-  PA4 = 0x04,
-  PA5 = 0x05,
-  PA6 = 0x06,
-  PA7 = 0x07,
-  PA8 = 0x08,
-  PA9 = 0x09,
-  PA10 = 0x0A,
-  PA11 = 0x0B,
-  PA12 = 0x0C,
-  PA13 = 0x0D,
-  PA14 = 0x0E,
-  PA15 = 0x0F
+  // Port A
+  PA0 = 0x00U,
+  PA1,
+  PA2,
+  PA3,
+  PA4,
+  PA5,
+  PA6,
+  PA7,
+  PA8,
+  PA9,
+  PA10,
+  PA11,
+  PA12,
+  PA13,
+  PA14,
+  PA15,
+  // Port C
+  PC0 = 0x20U,
+  PC1,
+  PC2,
+  PC3,
+  PC4,
+  PC5,
+  PC6,
+  PC7,
+  PC8,
+  PC9,
+  PC10,
+  PC11,
+  PC12,
+  PC13,
+  PC14,
+  PC15,
+  // Port D
+  PD0 = 0x30U,
+  PD1,
+  PD2,
+  PD3,
+  PD4,
+  PD5,
+  PD6,
+  PD7,
+  PD8,
+  PD9,
+  PD10,
+  PD11,
+  PD12,
+  PD13,
+  PD14,
+  PD15,
 } gpio_pin_t;
 
 typedef enum { LOW, HIGH } gpio_digital_t;
@@ -36,6 +78,7 @@ typedef enum {
 typedef enum {
   GPIO_AF_TIM2 = 0x1U,
   GPIO_AF_SPI1 = 0x5U,
+  GPIO_AF_SDIO = 0xCU,
 } gpio_af_t;
 
 typedef enum {

@@ -3,16 +3,14 @@
 
 #define PORT(enum_val) (GPIO_t *)(((enum_val >> 4) * sizeof(GPIO_t)) + GPIOA)
 
-// RM0390 pg. 171
-static inline void _gpio_enable_clock(GPIO_t *port) {
-  if (port == GPIOA) {
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOA;
-  }
+static inline void gpio_enable_clock(gpio_pin_t pin) {
+  // RM0390 pg. 143, GPIOA is bit 0, GPIOB is bit 1, etc
+  RCC->AHB1ENR |= (BIT(pin >> 4));
 }
 
 void gpio_set_mode(gpio_pin_t pin, gpio_mode_t mode) {
   GPIO_t *port = PORT(pin);
-  _gpio_enable_clock(port);
+  gpio_enable_clock(pin);
 
   port->MODER &= ~(3U << (2 * PINNO(pin)));
   port->MODER |= (mode << (2 * PINNO(pin)));
