@@ -74,13 +74,16 @@ typedef struct {
 #define FLASH_ACR_LATENCY_1 ((0x1 & 0xF) << 0)
 
 // RM0390 pg. 191
+// struct total 4 bytes (32 bit) x 10 fields = 40 bytes
+// but each range per PORT (RM0390 pg. 58) is 0x400 large = 1024 bytes
+// so each GPIOA, B, C.. is padded with 1024 - 40 = 984 additional bytes
 typedef struct {
   volatile uint32_t MODER, OTYPER, OSPEEDER, PUPDR, IDR, ODR, BSRR, LCKR, AFRL,
       AFRH;
 } GPIO_t;
 
-#define GPIOA_BASE (0x40020000UL)
-#define GPIOA ((GPIO_t *const)GPIOA_BASE)
+#define GPIOx_BASE (0x40020000UL)
+#define GPIO_PORT_OFFSET (0x400U)
 
 // SPI register map RM0390 pg. 874
 typedef struct {

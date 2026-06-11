@@ -1,11 +1,12 @@
 #include "gpio.h"
 #include "registers.h"
 
-#define PORT(enum_val) (GPIO_t *)(((enum_val >> 4) * sizeof(GPIO_t)) + GPIOA)
+#define PORT(enum_val)                                                         \
+  (GPIO_t *)(((enum_val >> 4) * GPIO_PORT_OFFSET) + GPIOx_BASE)
 
 static inline void gpio_enable_clock(gpio_pin_t pin) {
   // RM0390 pg. 143, GPIOA is bit 0, GPIOB is bit 1, etc
-  RCC->AHB1ENR |= (BIT(pin >> 4));
+  RCC->AHB1ENR |= (BIT((pin >> 4) & 0xF));
 }
 
 void gpio_set_mode(gpio_pin_t pin, gpio_mode_t mode) {
