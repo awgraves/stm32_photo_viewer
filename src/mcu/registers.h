@@ -40,8 +40,14 @@ typedef struct {
 #define RCC_CR_HSIRDY (BIT(1))
 #define RCC_CR_HSION (BIT(0))
 
-typedef enum { RCC_PLLP_DIV_2, RCC_PLLP_DIV_4 } PLLP_divisor_t;
-#define RCC_PLLCFGR_PLLP(divisor) ((divisor & 0x1) << 16)
+// RM0390 pg. 129
+typedef enum {
+  RCC_PLLP_DIV_2,
+  RCC_PLLP_DIV_4,
+  RCC_PLLP_DIV_6,
+  RCC_PLLP_DIV_8
+} PLLP_divisor_t;
+#define RCC_PLLCFGR_PLLP(divisor) ((divisor & 0x3) << 16)
 #define RCC_PLLCFGR_PLLN(multiplier) ((multiplier & 0x1FF) << 6)
 #define RCC_PLLCFGR_PLLM(divisor) ((divisor & 0x3F) << 0)
 

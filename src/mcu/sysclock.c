@@ -24,7 +24,7 @@ const config_t mhz40 = {
 const config_t mhz48 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
     .plln = RCC_PLLCFGR_PLLN(192),           // VCO becomes 192Mhz
-    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_2) // 192 / 4 = 48
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4) // 192 / 4 = 48
 };
 
 /*
@@ -107,7 +107,7 @@ void sysclock_init(cpu_freq_t freq) {
   // RMO390 pg. 133
   // switch from HSI to PLL as sysclock source
   RCC->CFGR |= RCC_CFGR_SW(RCC_SRC_PLL);
-  while (!(RCC->CFGR & RCC_CFGR_SW(RCC_SRC_PLL)))
+  while (!(RCC->CFGR & RCC_CFGR_SWS(RCC_SRC_PLL)))
     ;
 }
 
