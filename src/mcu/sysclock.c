@@ -3,28 +3,33 @@
 
 static uint32_t cpu_hz;
 
+// see comment inside sysclock_init for more details on these values
 typedef struct {
   uint32_t plln;
-  uint32_t pllp;
+  uint32_t pllp; // for sysclock
+  uint32_t pllq; // for pll48clk (sdio)
   uint16_t flash_acr_latency;
 } config_t;
 
 const config_t mhz32 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
-    .plln = RCC_PLLCFGR_PLLN(128),           // VCO becomes 128Mhz
-    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4) // 128 /4 = 32
+    .plln = RCC_PLLCFGR_PLLN(192),            // VCO becomes 192Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 192 / 6 = 32mhz
+    .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
 };
 
 const config_t mhz40 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
-    .plln = RCC_PLLCFGR_PLLN(160),           // VCO becomes 128Mhz
-    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4) // 160 /4 = 40
+    .plln = RCC_PLLCFGR_PLLN(240),            // VCO becomes 240Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 240 / 6 = 40mhz
+    .pllq = RCC_PLLCFGR_PLLQ(5),              // 240 / 5 = 48mhz
 };
 
 const config_t mhz48 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
-    .plln = RCC_PLLCFGR_PLLN(192),           // VCO becomes 192Mhz
-    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4) // 192 / 4 = 48
+    .plln = RCC_PLLCFGR_PLLN(192),            // VCO becomes 192Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4), // 192 / 4 = 48mhz
+    .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
 };
 
 /*
@@ -72,9 +77,6 @@ void sysclock_init(cpu_freq_t freq) {
   while (!(FLASH->ACR & FLASH_ACR_LATENCY_1))
     ;
 
-  /*
-      Configure PLL to output 32MHZ
-  */
   RCC->CR |= RCC_CR_HSION;
   while (!(RCC->CR & RCC_CR_HSIRDY))
     ;
@@ -93,12 +95,16 @@ void sysclock_init(cpu_freq_t freq) {
     Output result must not exceed 180Mhz
     Going with 4 so that 128 / 4 = 32 mhz (target)
 
+    PLLQ: divisor of VCO that should produce a final result of 48mhz.
+    Must be between 2 and 15 (inclusive)
+
     VCO output clock = PLL clock input X (PLLN / PLLM)
     general clock output (aka sysclock) = VCO clock / PLLP
-    usb otg fs, sdio (not used, don't care right now) = VCO clock / PLLQ
+    usb otg fs, sdio (should equal 48mhz) = VCO clock / PLLQ
   */
   // default source is set to HSI (PLLSRC bit set to 0)
-  RCC->PLLCFGR = (RCC_PLLCFGR_PLLM(16) | config->plln | config->pllp);
+  RCC->PLLCFGR =
+      (RCC_PLLCFGR_PLLM(16) | config->plln | config->pllp | config->pllq);
 
   RCC->CR |= RCC_CR_PLLON;
   while (!(RCC->CR & RCC_CR_PLLRDY))

@@ -50,6 +50,7 @@ typedef enum {
 #define RCC_PLLCFGR_PLLP(divisor) ((divisor & 0x3) << 16)
 #define RCC_PLLCFGR_PLLN(multiplier) ((multiplier & 0x1FF) << 6)
 #define RCC_PLLCFGR_PLLM(divisor) ((divisor & 0x3F) << 0)
+#define RCC_PLLCFGR_PLLQ(divisor) ((divisor & 0xF) << 24)
 
 // RM0390 pg. 132
 typedef enum { RCC_SRC_HSI, RCC_SRC_HSE, RCC_SRC_PLL, RCC_SRC_PLLR } rcc_src_t;
