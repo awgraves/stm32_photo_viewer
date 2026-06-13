@@ -67,6 +67,7 @@ typedef enum { RCC_SRC_HSI, RCC_SRC_HSE, RCC_SRC_PLL, RCC_SRC_PLLR } rcc_src_t;
 // RM0390 pg. 148
 #define RCC_APB2ENR_SPI1 (BIT(12))
 #define RCC_APB2ENR_SYSCFG (BIT(14))
+#define RCC_APB2ENR_SDIO (BIT(11))
 
 // RM0390 pg. 87
 typedef struct {
@@ -209,3 +210,79 @@ typedef struct {
 #define TIMx_CCER_CC2_ACTIVE_LOW (BIT(5))
 #define TIMx_CCER_CC1_EN (BIT(0))
 #define TIMx_CCER_CC2_EN (BIT(4))
+
+// RM 0390 pg. 1016, APB2 bus
+typedef struct {
+  volatile uint32_t POWER, CLKCR, ARG, CMD, RESPCMD, RESP1, RESP2, RESP3, RESP4,
+      DTIMER, DLEN, DCTRL, DCOUNT, STA, ICR, MASK, FIFOCNT, FIFO[32];
+} SDIO_t;
+
+// RM 0390 pg. 58, aka SDMMC
+#define SDIO_BASE (0x40012C00UL)
+#define SDIO ((SDIO_t *const)SDIO_BASE)
+
+// RM 0390 pg. 1002
+#define SDIO_POWER_OFF (0x00U)
+#define SDIO_POWER_ON (0x3U)
+
+/*
+   RM 0390 pg. 1003
+   SDIO_CLK == the STM32 clock (PLL48Mhz) that feeds the internal SDIO periph
+   SDIO_CK == actual output to SD card over CLK line
+
+   SDIO_CK = SDIOCLK / [CLKDIV + 2] note: only even CLKDIV values allowed
+   except if BYPASS bit is set, then SDIO_CK = SDIO_CLK
+
+   During identification mode, SDIO_CK must be less than 400 kHz.
+   afterwards, when RCAs are assigned, can increase bus freq.
+*/
+#define SDIO_CLKCR_BUS_WIDTH(width) ((width & 0x3) << 11)
+#define SDIO_CLKCR_BUS_WIDTH_CLEAR_BITS (0x3U << 11)
+#define SDIO_CLKCR_BYPASS (BIT(10))
+#define SDIO_CLKCR_PWRSAV (BIT(9)) // automatically turn off clock when bus idle
+#define SDIO_CLKCR_CLKEN (BIT(8))
+#define SDIO_CLKCR_CLKDIV_CLEAR (0xFFU)
+
+// RM 0390 pg. 1004
+#define SDIO_CMD_CPSMEN (BIT(10)) // starts the command path state machine
+#define SDIO_CMD_WAIT_RESP_NONE ((0x0U) << 6)
+#define SDIO_CMD_WAIT_RESP_SHORT ((0x1U) << 6)
+#define SDIO_CMD_WAIT_RESP_LONG ((0x3U) << 6)
+
+// RM 0390 pg. 1008
+// note value in SDIO_DLEN is a multiple of the block size SDMMC_DCTRL, ie 512
+// bytes
+#define SDIO_DCTRL_DBLOCKSIZE_512 ((0x9U) << 4)
+#define SDIO_DCTRL_DMAEN (BIT(3))
+#define SDIO_DCTRL_DTDIR_FROM_CARD_TO_CONTROLLER (BIT(1))
+#define SDIO_DCTRL_DTEN (BIT(0))
+
+// RM 0390 pg. 1009 - 1010
+#define SDIO_STA_RXDAVL (BIT(21))  // data is available
+#define SDIO_STA_RXFIFOE (BIT(19)) // all data read
+#define SDIO_STA_RXACT (BIT(13))   // data receive in progress
+#define SDIO_STA_TXACT (BIT(12))   // data transmit in progress
+#define SDIO_STA_CMDACT (BIT(11))  // command xfer in progress
+#define SDIO_STA_DBCKEND (BIT(10)) // block sent/received (CRC check pass)
+#define SDIO_STA_DATAEND (BIT(8))  // data end (data counter is zero)
+#define SDIO_STA_CMDSENT (BIT(7))  // command sent (no response required)
+#define SDIO_STA_CMDREND                                                       \
+  (BIT(6)) // command response received (CRC check passed)
+#define SDIO_STA_RXOVERR (BIT(5))  // FIFO overrun error
+#define SDIO_STA_TXUNDERR (BIT(4)) // FIFO underrun error
+#define SDIO_STA_DTIMEOUT (BIT(3)) // data resp timeout
+#define SDIO_STA_CTIMEOUT (BIT(2)) // command resp timeout
+#define SDIO_STA_DCRCFAIL (BIT(1)) // block sent/received (CRC check fail)
+#define SDIO_STA_CCRCFAIL (BIT(0)) // command resp received, but CRC check fail
+
+// RM 0390 pg. 1011 (clears corresponding flags in STA register)
+#define SDIO_ICR_DBCKEND (BIT(10))
+#define SDIO_ICR_DATAEND (BIT(8))
+#define SDIO_ICR_CMDSENT (BIT(7))
+#define SDIO_ICR_CMDREND (BIT(6))
+#define SDIO_ICR_RXOVERR (BIT(5))
+#define SDIO_ICR_TXUNDERR (BIT(4))
+#define SDIO_ICR_DTIMEOUT (BIT(3))
+#define SDIO_ICR_CTIMEOUT (BIT(2))
+#define SDIO_ICR_DCRCFAIL (BIT(1))
+#define SDIO_ICR_CCRCFAIL (BIT(0))

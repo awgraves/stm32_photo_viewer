@@ -1,7 +1,7 @@
 #include "board.h"
 #include "drivers/ili9341.h"
 #include "drivers/rotary_encoder.h"
-#include "drivers/sd_card.h"
+#include "drivers/sd_card_reader.h"
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
 #include "mcu/time.h"
@@ -26,7 +26,7 @@
 #define SD_DET PC6
 
 void board_init(void) {
-  sysclock_init(CPU_FREQ_40_MHZ);
+  sysclock_init(CPU_FREQ_48_MHZ);
   time_init();
 
   /* Peripherals */
@@ -46,8 +46,14 @@ void board_init(void) {
                                       .timer = &timer2};
   rotary_encoder_init(&rot_conf);
 
-  sd_card_config_t sd_conf = {
-      .det = SD_DET,
-  };
-  sd_card_init(&sd_conf);
+  sd_card_config_t sd_conf = {.det = SD_DET,
+                              .sdio = {
+                                  .d0 = SDIO_D0,
+                                  .d1 = SDIO_D1,
+                                  .d2 = SDIO_D2,
+                                  .d3 = SDIO_D3,
+                                  .clk = SDIO_CLK,
+                                  .cmd = SDIO_CMD,
+                              }};
+  sd_card_reader_init(&sd_conf);
 }

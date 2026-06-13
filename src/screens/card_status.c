@@ -1,7 +1,7 @@
 #include "card_status.h"
 #include "assets/fonts/ibm_bios_16.h"
 #include "common_colors.h"
-#include "drivers/sd_card.h"
+#include "drivers/sd_card_reader.h"
 #include "graphics/renderer.h"
 
 typedef struct {
@@ -14,7 +14,7 @@ static void bg_draw(void);
 static void card_status_draw(void);
 
 void card_status_show(void) {
-  state.connected = sd_card_check_inserted();
+  state.connected = sd_card_inserted();
   bg_draw();
   card_status_draw();
 }

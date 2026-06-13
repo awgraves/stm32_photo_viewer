@@ -26,9 +26,10 @@ SOURCES = mcu/startup.c \
 					mcu/timer.c \
 					mcu/gpio.c \
 					mcu/spi.c \
+					mcu/sdio.c \
 					drivers/ili9341.c \
 					drivers/rotary_encoder.c \
-					drivers/sd_card.c \
+					drivers/sd_card_reader.c \
 					board/board.c \
 					graphics/renderer.c \
 					assets/logos/splash_logo.c \

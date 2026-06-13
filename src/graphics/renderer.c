@@ -18,6 +18,15 @@ static void draw_1bpp_pixels(uint32_t pixel_count, const uint8_t *bytes,
 Public API
 */
 
+uint16_t renderer_get_screen_height(void) { return ILI9341_HEIGHT_PIXELS; }
+uint16_t renderer_get_screen_width(void) { return ILI9341_WIDTH_PIXELS; }
+uint16_t renderer_get_centered_x(uint16_t width) {
+  return (renderer_get_screen_width() / 2) - (width / 2) - 1;
+}
+uint16_t renderer_get_centered_y(uint16_t height) {
+  return (renderer_get_screen_height() / 2) - (height / 2) - 1;
+}
+
 void renderer_fill_screen(color_t color) {
   for (buff_idx = 0; buff_idx < BUFF_SIZE; buff_idx++) {
     buff[buff_idx] = color;

@@ -3,7 +3,13 @@
 #include "color.h"
 #include "font.h"
 
+uint16_t renderer_get_screen_height(void);
+uint16_t renderer_get_screen_width(void);
+uint16_t renderer_get_centered_x(uint16_t width);
+uint16_t renderer_get_centered_y(uint16_t height);
+
 void renderer_fill_screen(color_t color);
+
 void renderer_draw_indexed_bitmap(uint16_t x, uint16_t y,
                                   const indexed_bitmap_t *bitmap,
                                   const color_palette_t palette);
