@@ -1,11 +1,10 @@
 #pragma once
 
 typedef enum {
-  /* input controls */
+  /* phyical inputs */
   EVENT_ENCODER_CW,
   EVENT_ENCODER_CCW,
   EVENT_ENCODER_PRESSED,
-  /* sd card */
-  EVENT_SD_CARD_INSERTED,
-  EVENT_SD_CARD_EJECTED,
+  /* application events */
+  EVENT_STORAGE_STATE_CHANGE,
 } event_t;

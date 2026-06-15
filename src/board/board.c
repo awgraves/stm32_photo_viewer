@@ -1,7 +1,7 @@
 #include "board.h"
 #include "drivers/ili9341.h"
 #include "drivers/rotary_encoder.h"
-#include "drivers/sd_card_reader.h"
+#include "drivers/sd_card.h"
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
 #include "mcu/time.h"
@@ -55,5 +55,5 @@ void board_init(void) {
                                   .clk = SDIO_CLK,
                                   .cmd = SDIO_CMD,
                               }};
-  sd_card_reader_init(&sd_conf);
+  sd_card_init(&sd_conf);
 }

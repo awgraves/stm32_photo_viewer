@@ -3,7 +3,8 @@
 #include "inputs/poll.h"
 #include "mcu/time.h"
 #include "screens/screens.h"
-#include "screens/splash.h"
+// #include "screens/splash.h"
+#include "storage/storage.h"
 
 #define POLL_MS_INTERVAL 10
 
@@ -13,9 +14,11 @@ screen_t *curr_screen;
 int main() {
   board_init();
 
-  splash_show();
+  storage_init();
 
-  curr_screen = &menu;
+  // splash_show();
+
+  curr_screen = &card_status;
   curr_screen->enter();
 
   uint32_t last_poll = 0;
@@ -24,7 +27,8 @@ int main() {
     now = millis();
     if (now - last_poll >= POLL_MS_INTERVAL) {
       last_poll = now;
-      poll_inputs();
+      inputs_poll();
+      storage_poll();
       process_events();
     }
   }

@@ -29,7 +29,7 @@ SOURCES = mcu/startup.c \
 					mcu/sdio.c \
 					drivers/ili9341.c \
 					drivers/rotary_encoder.c \
-					drivers/sd_card_reader.c \
+					drivers/sd_card.c \
 					board/board.c \
 					graphics/renderer.c \
 					assets/logos/splash_logo.c \
@@ -37,6 +37,7 @@ SOURCES = mcu/startup.c \
 					assets/fonts/terminus_bold_16.c \
 					events/event_queue.c \
 					inputs/poll.c \
+					storage/storage.c \
 					screens/splash.c \
 					screens/menu.c \
 					screens/card_status.c \

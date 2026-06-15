@@ -160,6 +160,7 @@ void sdio_ck_freq_set(sdio_ck_freq_t freq) {
     break;
   }
   sdio_ck_enable();
+  delay_ms(1);
 }
 
 void sdio_bus_width_set(sdio_bus_width_t width) {
@@ -168,6 +169,7 @@ void sdio_bus_width_set(sdio_bus_width_t width) {
   delay_ms(1);
   SDIO->CLKCR |= width;
   sdio_ck_enable();
+  delay_ms(1);
 }
 
 static inline void sdio_cmd_flags_clear(void) {

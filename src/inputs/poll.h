@@ -1,3 +1,3 @@
 #pragma once
 
-void poll_inputs(void);
+void inputs_poll(void);
