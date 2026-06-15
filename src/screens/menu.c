@@ -1,8 +1,8 @@
-#include "menu.h"
 #include "assets/fonts/ibm_bios_16.h"
 #include "assets/fonts/terminus_bold_16.h"
 #include "common_colors.h"
 #include "graphics/renderer.h"
+#include "screens.h"
 #include <stdbool.h>
 
 #define WINDOW_OUTER_X_START 19
@@ -38,30 +38,38 @@ static menu_state_t menu_state = {
                   "more_again.bmp", "eight_is_great.bmp",
                   "number_nine_number_nine.bmp", "wow_so_many_files.bmp"}};
 
-static void menu_draw(void);
+void menu_enter(void);
+screen_t *menu_handle_event(event_t event);
 
+screen_t menu = {.enter = menu_enter, .handle_event = menu_handle_event};
+
+static void menu_draw(void);
 static void menu_move_up(void);
 static void menu_move_down(void);
-
 /*
  Public API
 */
 
-void menu_show(void) {
+void menu_enter(void) {
   menu_state.selected_idx = 0;
   menu_draw();
 }
 
-void menu_handle_event(input_event_t event) {
+screen_t *menu_handle_event(event_t event) {
   switch (event) {
-  case INPUT_EVENT_ENCODER_CW:
+  case EVENT_ENCODER_CW:
     menu_move_down();
     break;
-  case INPUT_EVENT_ENCODER_CCW:
+  case EVENT_ENCODER_CCW:
     menu_move_up();
+    break;
+  case EVENT_ENCODER_PRESSED:
+    return &card_status;
   default:
     break;
   }
+
+  return &menu;
 }
 
 /*

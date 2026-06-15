@@ -1,26 +1,29 @@
 #include "rotary_encoder.h"
-#include "input/event_queue.h"
-#include "mcu/time.h"
 #include "mcu/timer.h"
 
+#define SWITCH_DEBOUNCE_THRESHOLD 5
+
 typedef struct {
-  // switch stuff
+  // switch
   gpio_pin_t sw1;
-  uint32_t last_sw_press;
-  gpio_digital_t last_sw_state;
+  gpio_digital_t sw_state_stable;
+  gpio_digital_t sw_state_last_sample;
+  uint8_t sw_samples_remaining;
 
-  // rotary stuff
+  // rotary
   timer_t *timer;
-  uint16_t last_cnt;
-} rotary_state_t;
+  uint16_t last_timer_cnt;
+} io_t;
 
-static rotary_state_t rot_state;
+static io_t io;
 
 void rotary_encoder_init(rotary_encoder_config_t *config) {
-  rot_state.sw1 = config->sw1;
-  rot_state.last_sw_press = 0;
-  rot_state.last_sw_state = HIGH;
-  rot_state.timer = config->timer;
+  io.sw1 = config->sw1;
+  io.sw_state_stable = HIGH;
+  io.sw_state_last_sample = HIGH;
+  io.sw_samples_remaining = SWITCH_DEBOUNCE_THRESHOLD;
+  io.timer = config->timer;
+  io.last_timer_cnt = timer_get_cnt(config->timer);
 
   gpio_set_mode(config->sw1, GPIO_MODE_INPUT);
   gpio_set_mode(config->enca, GPIO_MODE_AF);
@@ -34,32 +37,42 @@ void rotary_encoder_init(rotary_encoder_config_t *config) {
   gpio_set_pupd(config->encb, GPIO_PUPD_PULL_UP);
 
   timer_config_t timer_conf = {.mode = TIMER_MODE_ENCODER};
-  timer_init(rot_state.timer, &timer_conf);
+  timer_init(io.timer, &timer_conf);
 }
 
-static void rotary_encoder_button_poll(void) {
-  uint32_t now = millis();
-  if (now - rot_state.last_sw_press < 50)
-    return; // debounce
+static bool rotary_encoder_button_poll(void);
 
-  gpio_digital_t curr = gpio_digital_read(rot_state.sw1);
-  if (curr == HIGH && rot_state.last_sw_state == LOW) {
-    rot_state.last_sw_press = now;
-    event_queue_push(INPUT_EVENT_ENCODER_CW);
-  }
-  rot_state.last_sw_state = curr;
+rotary_state_t rotary_encoder_get_state(void) {
+  uint16_t curr_cnt = timer_get_cnt(io.timer);
+  int16_t delta = curr_cnt - io.last_timer_cnt;
+  io.last_timer_cnt = curr_cnt;
+
+  rotary_state_t state = {.delta = delta,
+                          .button_pressed = rotary_encoder_button_poll()};
+
+  return state;
 }
 
-void rotary_encoder_poll(void) {
-  uint16_t curr_cnt = timer_get_cnt(rot_state.timer);
-  int16_t delta = curr_cnt - rot_state.last_cnt;
-  rot_state.last_cnt = curr_cnt;
+/*
+  Helpers
+*/
 
-  if (delta > 0) {
-    event_queue_push(INPUT_EVENT_ENCODER_CW);
-  } else if (delta < 0) {
-    event_queue_push(INPUT_EVENT_ENCODER_CCW);
+static bool rotary_encoder_button_poll(void) {
+  gpio_digital_t curr = gpio_digital_read(io.sw1);
+
+  if (curr == io.sw_state_last_sample) {
+    if (io.sw_samples_remaining > 0) {
+      io.sw_samples_remaining--;
+    }
+  } else {
+    io.sw_samples_remaining = SWITCH_DEBOUNCE_THRESHOLD;
+  }
+  io.sw_state_last_sample = curr;
+
+  if (io.sw_samples_remaining == 0) {
+    io.sw_state_stable = curr;
   }
 
-  rotary_encoder_button_poll();
+  // active low
+  return (io.sw_state_stable == LOW);
 }

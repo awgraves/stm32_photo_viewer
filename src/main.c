@@ -1,48 +1,43 @@
 #include "board/board.h"
-#include "drivers/sd_card_reader.h"
-// #include "drivers/rotary_encoder.h"
-#include "input/event_queue.h"
+#include "events/event_queue.h"
+#include "inputs/poll.h"
 #include "mcu/time.h"
-// #include "screens/menu.h"
-#include "screens/card_status.h"
+#include "screens/screens.h"
 #include "screens/splash.h"
 
 #define POLL_MS_INTERVAL 10
 
-void process_input_events(void);
+void process_events(void);
+screen_t *curr_screen;
 
 int main() {
   board_init();
 
   splash_show();
-  // menu_show();
-  card_status_show();
+
+  curr_screen = &menu;
+  curr_screen->enter();
 
   uint32_t last_poll = 0;
   uint32_t now = 0;
-  bool last_connected = false;
-
   while (1) {
     now = millis();
     if (now - last_poll >= POLL_MS_INTERVAL) {
-      // rotary_encoder_poll();
-      bool connected = sd_card_inserted();
-      if (last_connected && !connected) {
-        event_queue_push(INPUT_EVENT_SD_CARD_EJECTED);
-      } else if (!last_connected && connected) {
-        event_queue_push(INPUT_EVENT_SD_CARD_INSERTED);
-      }
       last_poll = now;
-      last_connected = connected;
+      poll_inputs();
+      process_events();
     }
-    process_input_events();
   }
 }
 
-void process_input_events(void) {
-  input_event_t event;
+void process_events(void) {
+  event_t event;
+  screen_t *next;
   while (event_queue_pop(&event)) {
-    card_status_handle_event(event);
-    // menu_handle_event(event);
+    next = curr_screen->handle_event(event);
+    if (next != curr_screen) {
+      curr_screen = next;
+      curr_screen->enter();
+    }
   }
 }

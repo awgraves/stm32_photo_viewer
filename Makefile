@@ -35,10 +35,11 @@ SOURCES = mcu/startup.c \
 					assets/logos/splash_logo.c \
 					assets/fonts/ibm_bios_16.c \
 					assets/fonts/terminus_bold_16.c \
+					events/event_queue.c \
+					inputs/poll.c \
 					screens/splash.c \
 					screens/menu.c \
 					screens/card_status.c \
-					input/event_queue.c \
 					main.c
 
 OBJ_NAMES = $(SOURCES:.c=.o)
