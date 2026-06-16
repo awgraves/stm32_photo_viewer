@@ -10,6 +10,7 @@ typedef enum {
 
 typedef struct {
   storage_status_t status;
+  const char *card_name;
 } storage_info_t;
 
 void storage_init(void);

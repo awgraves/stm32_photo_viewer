@@ -26,8 +26,9 @@ void sdio_bus_width_set(sdio_bus_width_t width);
 // RM 0390 pgs. 996 - 1000
 typedef enum {
   SDIO_RESP_TYPE_NONE,
-  SDIO_RESP_TYPE_SHORT, // 48 bits: R1, R3, R4
-  SDIO_RESP_TYPE_LONG,  // 136 bits: R2 (CID/CSD)
+  SDIO_RESP_TYPE_SHORT,        // 48 bits: R1, R4
+  SDIO_RESP_TYPE_SHORT_NO_CRC, // special case for R3 (OCR) response
+  SDIO_RESP_TYPE_LONG,         // 136 bits: R2 (CID/CSD)
 } sdio_resp_type_t;
 
 typedef enum {

@@ -12,10 +12,13 @@ typedef enum {
   CARD_OK,
   CARD_ERR_NOT_INSERTED,
   CARD_ERR_FAILED_RESET,
-  CARD_ERR_FAILED_VOLTAGE
+  CARD_ERR_FAILED_VOLTAGE,
+  CARD_ERR_FAILED_HANDSHAKE,
+  CARD_ERR_FAILED_CID,
 } card_result_t;
 
 void sd_card_gpio_init(sd_card_gpio_config_t *config);
 
 bool sd_card_inserted(void);
 card_result_t sd_card_initialize(void);
+const char *sd_card_get_name(void);

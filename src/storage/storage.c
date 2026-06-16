@@ -37,6 +37,7 @@ static void status_change(storage_status_t next) {
     break;
   case STORAGE_READY:
     state.card_ready = true;
+    state.info.card_name = sd_card_get_name();
   default:
     break;
   }
