@@ -1,15 +1,12 @@
 #include "sd_card.h"
 
-static sd_card_config_t conf;
-static sd_card_state_t state;
+static sd_card_gpio_config_t conf;
 
-void sd_card_init(sd_card_config_t *config) {
+void sd_card_gpio_init(sd_card_gpio_config_t *config) {
   conf = *config;
   gpio_set_mode(conf.det, GPIO_MODE_INPUT);
 
   sdio_init(&conf.sdio);
-
-  state.err = CARD_ERR_NONE;
 }
 
 bool sd_card_inserted(void) { return gpio_digital_read(conf.det); }
@@ -25,11 +22,9 @@ bool sd_card_inserted(void) { return gpio_digital_read(conf.det); }
 #define CMD55 0x37U            // next cmd sent should be interpreted as ACMD
 #define ACMD41 0x29U           // assign voltage to use based on arg
 
-bool sd_card_probe(void) {
-  state.err = CARD_ERR_NONE;
+card_result_t sd_card_initialize(void) {
   if (!sd_card_inserted()) {
-    state.err = CARD_ERR_NOT_INSERTED;
-    return false;
+    return CARD_ERR_NOT_INSERTED;
   }
   // resets both clk speed and bus width
   sdio_reset();
@@ -38,7 +33,7 @@ bool sd_card_probe(void) {
   sdio_status_t status;
   status = sdio_send_cmd(CMD0, 0, SDIO_RESP_TYPE_NONE, 0);
   if (status != SDIO_OK) {
-    state.err = CARD_ERR_FAILED_RESET;
+    return CARD_ERR_FAILED_RESET;
   }
 
   // check voltage
@@ -46,12 +41,9 @@ bool sd_card_probe(void) {
   status =
       sdio_send_cmd(CMD8, ARG_VOLTAGE_VAL, SDIO_RESP_TYPE_SHORT, &short_resp);
   if (status != SDIO_OK || short_resp != ARG_VOLTAGE_VAL) {
-    state.err = CARD_ERR_FAILED_VOLTAGE;
-    return false;
+    return CARD_ERR_FAILED_VOLTAGE;
   }
 
   // assign voltage
-  return true;
+  return CARD_OK;
 }
-
-const sd_card_state_t *sd_card_get_state(void) { return &state; }

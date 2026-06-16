@@ -59,7 +59,7 @@ void storage_poll(void) {
 
   if (state.info.status == STORAGE_INITIALIZING) {
     if (millis() - state.last_init_attempt_ms >= INIT_DELAY_MS) {
-      if ((state.card_ready = sd_card_probe())) {
+      if (sd_card_initialize() == CARD_OK) {
         status_change(STORAGE_READY);
       } else if (state.remaining_init_retries > 0) {
         state.remaining_init_retries--;

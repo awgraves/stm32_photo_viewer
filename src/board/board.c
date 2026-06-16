@@ -46,14 +46,14 @@ void board_init(void) {
                                       .timer = &timer2};
   rotary_encoder_init(&rot_conf);
 
-  sd_card_config_t sd_conf = {.det = SD_DET,
-                              .sdio = {
-                                  .d0 = SDIO_D0,
-                                  .d1 = SDIO_D1,
-                                  .d2 = SDIO_D2,
-                                  .d3 = SDIO_D3,
-                                  .clk = SDIO_CLK,
-                                  .cmd = SDIO_CMD,
-                              }};
-  sd_card_init(&sd_conf);
+  sd_card_gpio_config_t sd_conf = {.det = SD_DET,
+                                   .sdio = {
+                                       .d0 = SDIO_D0,
+                                       .d1 = SDIO_D1,
+                                       .d2 = SDIO_D2,
+                                       .d3 = SDIO_D3,
+                                       .clk = SDIO_CLK,
+                                       .cmd = SDIO_CMD,
+                                   }};
+  sd_card_gpio_init(&sd_conf);
 }
