@@ -4,13 +4,15 @@
 #include "mcu/time.h"
 #include <stdbool.h>
 
-#define MOUNT_DELAY_MS 1000 // quick and dirty, ~1 sec at 10 ms poll interval
+#define INIT_DELAY_MS 1000 // quick and dirty, ~1 sec at 10 ms poll interval
+#define INIT_MAX_RETRIES 3
 
 typedef struct {
-  storage_status_t status;
-  uint32_t mount_last_attempt_ms;
+  uint32_t last_init_attempt_ms;
   bool card_inserted;
   bool card_ready;
+  uint8_t remaining_init_retries;
+  storage_info_t info;
 } state_t;
 
 static state_t state;
@@ -27,7 +29,8 @@ static void status_change(storage_status_t next) {
   switch (next) {
   case STORAGE_INITIALIZING:
     state.card_ready = false;
-    state.mount_last_attempt_ms = millis();
+    state.last_init_attempt_ms = millis();
+    state.remaining_init_retries = INIT_MAX_RETRIES;
     break;
   case STORAGE_NO_MEDIA:
     state.card_ready = false;
@@ -38,10 +41,10 @@ static void status_change(storage_status_t next) {
     break;
   }
 
-  if (next != state.status) {
+  if (next != state.info.status) {
     event_queue_push(EVENT_STORAGE_STATE_CHANGE);
   }
-  state.status = next;
+  state.info.status = next;
 }
 
 void storage_poll(void) {
@@ -54,11 +57,13 @@ void storage_poll(void) {
   }
   state.card_inserted = sd_card_inserted();
 
-  // mounting logic
-  if (state.status == STORAGE_INITIALIZING) {
-    if (millis() - state.mount_last_attempt_ms >= MOUNT_DELAY_MS) {
+  if (state.info.status == STORAGE_INITIALIZING) {
+    if (millis() - state.last_init_attempt_ms >= INIT_DELAY_MS) {
       if ((state.card_ready = sd_card_probe())) {
         status_change(STORAGE_READY);
+      } else if (state.remaining_init_retries > 0) {
+        state.remaining_init_retries--;
+        state.last_init_attempt_ms = millis();
       } else {
         status_change(STORAGE_ERROR);
       };
@@ -66,4 +71,4 @@ void storage_poll(void) {
   }
 }
 
-storage_status_t storage_get_status(void) { return state.status; };
+const storage_info_t *storage_get_info(void) { return &state.info; };

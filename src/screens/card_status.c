@@ -40,10 +40,10 @@ static void bg_draw(void) { renderer_fill_screen(BG_COLOR); }
 static void card_status_draw(void) {
   renderer_draw_rect(0, 0, renderer_get_screen_width() - 1, 16, BG_COLOR);
 
-  storage_status_t status = storage_get_status();
+  const storage_info_t *info = storage_get_info();
   char *text;
 
-  switch (status) {
+  switch (info->status) {
   case STORAGE_NO_MEDIA:
     text = "No Media";
     break;
