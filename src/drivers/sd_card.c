@@ -4,30 +4,27 @@
 
 static sd_card_gpio_config_t conf;
 
-typedef struct {
-  bool high_capacity;
-  char name[6];
-} state_t;
-
-static state_t state;
+// block = sector = 512 bytes
+#define BLOCK_SIZE_IN_BYTES 512ULL // sd card spec page. 234
+static sd_card_info_t card;
 
 // sd spec pg. 224 outlines CID register
-typedef struct __attribute__((packed)) {
-  uint8_t mid;  // manufacturer id
-  char oid[2];  // OEM application id, 2 printable ASCII
-  char pnm[5];  // product name
-  uint8_t prv;  // product revision
-  uint32_t psn; // product serial number
-  uint16_t mdt; // manufacturing date (lowest 12 bits only)
-  uint8_t reserved;
-} cid_register_t;
+#define CID_PNM_MSB 103
+#define CID_PNM_LSB 64
 
-void sd_card_gpio_init(sd_card_gpio_config_t *config) {
-  conf = *config;
-  gpio_set_mode(conf.det, GPIO_MODE_INPUT);
+// typedef struct __attribute__((packed)) {
+//   uint8_t mid;  // manufacturer id
+//   char oid[2];  // OEM application id
+//   char pnm[5];  // product name
+//   uint8_t prv;  // product revision
+//   uint32_t psn; // product serial number
+//   uint16_t mdt; // manufacturing date (lowest 12 bits only)
+//   uint8_t reserved;
+// } cid_register_t;
 
-  sdio_init(&conf.sdio);
-}
+// sd spec pg. 226 outlines CSD register version 2.0 (for SDHC and SDXC)
+#define CSD_C_SIZE_MSB 69
+#define CSD_C_SIZE_LSB 48
 
 bool sd_card_inserted(void) { return gpio_digital_read(conf.det); }
 
@@ -46,11 +43,21 @@ bool sd_card_inserted(void) { return gpio_digital_read(conf.det); }
 #define ARG_ACMD41 (ACMD41_VOLTAGE_WINDOW | ACMD41_HCS)
 #define CARD_INITIALIZED (1U << 31)  // from successful ACMD41 response
 #define HIGH_CAPACITY_BIT (1U << 30) // from successfuly ACMD41 response
-#define CMD2 0x2                     // request CID
-#define CMD3 0x3                     // request RCA
+#define CMD2 0x2                     // request CID (card identification data)
+#define CMD3 0x3                     // request RCA (relative card address)
+#define CMD9 0x9                     // request CSD (card-specific data)
+// #define ACMD6 0x6                    // change bus width spec pg. 52
 
-static inline void save_product_name_from_cid(uint32_t raw_resp[4]);
+static inline bool is_high_capacity_card(uint32_t raw_resp);
+static inline void save_product_name(const uint32_t raw_resp[4]);
+static inline void save_rca(uint32_t raw_resp);
+static inline void save_capacity_info(const uint32_t raw_resp[4]);
 
+/*
+  Note, for simplicity of this driver, choosing to only support modern 'high
+  capacity' sd cards, which are 4 GB to 32 GB in size.
+  SDXC (extended capability) are > 64GB
+*/
 card_result_t sd_card_initialize(void) {
   if (!sd_card_inserted()) {
     return CARD_ERR_NOT_INSERTED;
@@ -92,8 +99,9 @@ card_result_t sd_card_initialize(void) {
     }
   } while (!(short_resp & CARD_INITIALIZED));
 
-  // save capacity tier
-  state.high_capacity = (short_resp & HIGH_CAPACITY_BIT) != 0;
+  if (!is_high_capacity_card(short_resp)) {
+    return CARD_ERR_NOT_HC_CARD; // modern cards, 2gb or more
+  }
 
   uint32_t long_resp[4];
   status = sdio_send_cmd(CMD2, 0, SDIO_RESP_TYPE_LONG, long_resp);
@@ -101,30 +109,90 @@ card_result_t sd_card_initialize(void) {
     return CARD_ERR_FAILED_CID;
   }
 
-  save_product_name_from_cid(long_resp);
+  save_product_name(long_resp);
+
+  status = sdio_send_cmd(CMD3, 0, SDIO_RESP_TYPE_SHORT, &short_resp);
+  if (status != SDIO_OK) {
+    return CARD_ERR_FAILED_RCA;
+  }
+  save_rca(short_resp);
+
+  status = sdio_send_cmd(CMD9, card.rca << 16, SDIO_RESP_TYPE_LONG, long_resp);
+  if (status != SDIO_OK) {
+    return CARD_ERR_FAILED_CSD;
+  }
+  save_capacity_info(long_resp);
 
   // NOTE: sd card spec pg 52 discusses bus width selection
   return CARD_OK;
 }
 
-const char *sd_card_get_name(void) { return state.name; }
+const sd_card_info_t *sd_card_get_info(void) { return &card; }
 
 /*
   Helpers
 */
+// the raw response is 4 consecutive 32 bit numbers that represent
+// the MSB -> LSB of 128 bits.
+// pulling the product name is 5 chars X 8 bits = 40 bits, so require uint64_t;
+static uint64_t extract_bits_from_raw_long(const uint32_t raw[4], uint8_t msb,
+                                           uint8_t lsb) {
 
-static inline void save_product_name_from_cid(uint32_t raw_resp[4]) {
-  uint32_t swapped[4];
-  // need to swap due to endianness mismatch from SDIO registers
-  swapped[0] = __builtin_bswap32(raw_resp[0]);
-  swapped[1] = __builtin_bswap32(raw_resp[1]);
-  swapped[2] = __builtin_bswap32(raw_resp[2]);
-  swapped[3] = __builtin_bswap32(raw_resp[3]);
+  uint8_t width = msb - lsb + 1;
 
-  cid_register_t *cid = (cid_register_t *)swapped;
+  if (width > 64 || msb < lsb || msb > 127 || lsb < 0)
+    return 0;
+
+  uint64_t result = 0;
+
+  // 16
+  const uint8_t *bytes = (const uint8_t *)raw;
+
+  // iterate from MSB down to LSB
+  for (int i = 0; i < width; i++) {
+    int curr_bit = msb - i;
+    int byte_idx = ((127 - curr_bit) >> 3); // divide by 8
+    int bit_idx = ((curr_bit) % 8);         // MSB of byte down
+
+    uint8_t bit_val = (bytes[byte_idx] >> bit_idx) & 1;
+
+    result = ((result << 1) | bit_val);
+  }
+  return result;
+}
+
+static inline bool is_high_capacity_card(uint32_t raw_resp) {
+  return (raw_resp & HIGH_CAPACITY_BIT) != 0;
+}
+
+static inline void save_product_name(const uint32_t raw_resp[4]) {
+  uint64_t raw_pnm =
+      extract_bits_from_raw_long(raw_resp, CID_PNM_MSB, CID_PNM_LSB);
 
   for (int i = 0; i < 5; i++) {
-    state.name[i] = cid->pnm[i];
+    card.name[i] = (char)(raw_pnm >> (8 * (4 - i)) & 0xFF);
   }
-  state.name[5] = '\0';
+
+  card.name[5] = '\0';
+}
+
+static inline void save_rca(uint32_t raw_resp) {
+  // RM 0390 pg. 1000
+  card.rca = ((raw_resp >> 16) & 0xFFFF);
+}
+
+static inline void save_capacity_info(const uint32_t raw_resp[4]) {
+  uint64_t c_size =
+      extract_bits_from_raw_long(raw_resp, CSD_C_SIZE_MSB, CSD_C_SIZE_LSB);
+
+  // sd spec pg. 234
+  card.sector_count = (c_size + 1) * 1024;
+  card.capacity_bytes = (card.sector_count * BLOCK_SIZE_IN_BYTES);
+}
+
+void sd_card_gpio_init(sd_card_gpio_config_t *config) {
+  conf = *config;
+  gpio_set_mode(conf.det, GPIO_MODE_INPUT);
+
+  sdio_init(&conf.sdio);
 }

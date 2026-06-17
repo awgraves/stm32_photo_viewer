@@ -14,11 +14,22 @@ typedef enum {
   CARD_ERR_FAILED_RESET,
   CARD_ERR_FAILED_VOLTAGE,
   CARD_ERR_FAILED_HANDSHAKE,
+  CARD_ERR_NOT_HC_CARD,
   CARD_ERR_FAILED_CID,
+  CARD_ERR_FAILED_RCA,
+  CARD_ERR_FAILED_CSD
 } card_result_t;
+
+typedef struct {
+  char name[6];
+  uint16_t rca;
+  uint64_t sector_count;
+  uint64_t capacity_bytes;
+} sd_card_info_t;
 
 void sd_card_gpio_init(sd_card_gpio_config_t *config);
 
 bool sd_card_inserted(void);
 card_result_t sd_card_initialize(void);
-const char *sd_card_get_name(void);
+
+const sd_card_info_t *sd_card_get_info(void);

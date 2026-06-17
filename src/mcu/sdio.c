@@ -162,10 +162,14 @@ sdio_status_t sdio_send_cmd(uint8_t cmd, uint32_t arg,
       resp[0] = SDIO->RESP1;
       break;
     case SDIO_RESP_TYPE_LONG:
-      resp[0] = SDIO->RESP1;
-      resp[1] = SDIO->RESP2;
-      resp[2] = SDIO->RESP3;
-      resp[3] = SDIO->RESP4;
+      // RM 0390 pg. 1006, RESP1 contains MSB, 127:96, etc
+      // but in memory each 32 bits is stored in little endian
+      // so must swap to achieve same byte order as what came over the wire
+      // and then cast to a uint8_t stream
+      resp[0] = __builtin_bswap32(SDIO->RESP1);
+      resp[1] = __builtin_bswap32(SDIO->RESP2);
+      resp[2] = __builtin_bswap32(SDIO->RESP3);
+      resp[3] = __builtin_bswap32(SDIO->RESP4);
       break;
     default:
       break;

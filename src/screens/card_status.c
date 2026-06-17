@@ -64,7 +64,7 @@ static void card_status_draw(void) {
 
     renderer_draw_text(0, 16, "Card name: ", &ibm_bios_16, TEXT_COLOR,
                        BG_COLOR);
-    renderer_draw_text(11 * 16, 16, info->card_name, &ibm_bios_16, TEXT_COLOR,
+    renderer_draw_text(11 * 16, 16, info->card->name, &ibm_bios_16, TEXT_COLOR,
                        BG_COLOR);
   }
 }

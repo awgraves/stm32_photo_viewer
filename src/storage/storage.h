@@ -1,4 +1,5 @@
 #pragma once
+#include "drivers/sd_card.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -10,7 +11,7 @@ typedef enum {
 
 typedef struct {
   storage_status_t status;
-  const char *card_name;
+  const sd_card_info_t *card;
 } storage_info_t;
 
 void storage_init(void);
