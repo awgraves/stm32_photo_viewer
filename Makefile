@@ -75,4 +75,4 @@ debug_server:
 	openocd -f board/st_nucleo_f4.cfg
 
 debug:
-	$(GDB) $(BUILD_DIR)/code.elf -ex "target remote :3333"
+	$(GDB) $(BUILD_DIR)/code.elf -ex "target remote :3333" -ex "monitor reset halt"
