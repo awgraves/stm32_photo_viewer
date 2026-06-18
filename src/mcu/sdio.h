@@ -12,6 +12,7 @@ typedef struct {
 
 typedef enum {
   SDIO_CK_FREQ_400KHZ,
+  SDIO_CK_FREQ_24MHZ,
   SDIO_CK_FREQ_48MHZ,
 } sdio_ck_freq_t;
 
@@ -19,7 +20,7 @@ typedef enum {
 typedef enum { SDIO_BUS_WIDTH_1, SDIO_BUS_WIDTH_4 } sdio_bus_width_t;
 
 void sdio_init(sdio_config_t *conf);
-void sdio_reset(void);
+void sdio_reset_bus_speed_and_width(void);
 void sdio_ck_freq_set(sdio_ck_freq_t freq);
 void sdio_bus_width_set(sdio_bus_width_t width);
 

@@ -45,10 +45,10 @@ void sdio_init(sdio_config_t *conf) {
   // power up the SDIO state machine
   SDIO->POWER = SDIO_POWER_ON;
 
-  sdio_reset();
+  sdio_reset_bus_speed_and_width();
 }
 
-void sdio_reset(void) {
+void sdio_reset_bus_speed_and_width(void) {
   // freq must be slow during identification phase
   sdio_ck_freq_set(SDIO_CK_FREQ_400KHZ);
   sdio_bus_width_set(SDIO_BUS_WIDTH_1);
@@ -66,11 +66,15 @@ static inline void sdio_ck_enable(void);
 
 void sdio_ck_freq_set(sdio_ck_freq_t freq) {
   sdio_ck_disable();
-  SDIO->CLKCR &= ~(SDIO_CLKCR_CLKDIV_CLEAR);
+  SDIO->CLKCR &= ~(SDIO_CLKCR_CLKDIV_CLEAR | SDIO_CLKCR_BYPASS);
   delay_ms(1);
   switch (freq) {
   case SDIO_CK_FREQ_400KHZ:
-    SDIO->CLKCR = ((SDIO->CLKCR | STARTUP_DIVISOR) & ~(SDIO_CLKCR_BYPASS));
+    SDIO->CLKCR = (SDIO->CLKCR | STARTUP_DIVISOR);
+    delay_ms(1);
+    break;
+  case SDIO_CK_FREQ_24MHZ:
+    // default CLKDIV is 0, so PLL48mhz / (0 + 2)
     delay_ms(1);
     break;
   case SDIO_CK_FREQ_48MHZ:
