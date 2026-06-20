@@ -3,9 +3,6 @@
 #include "mcu/sdio.h"
 #include <stdbool.h>
 
-// block = sector = 512 bytes
-#define BLOCK_SIZE_IN_BYTES 512ULL // sd card spec page. 234
-
 typedef struct {
   gpio_pin_t det;
   sdio_config_t sdio;
@@ -33,7 +30,6 @@ typedef struct {
   char name[6];
   uint16_t rca;
   uint32_t sector_count;
-  uint64_t capacity_bytes;
 } sd_card_info_t;
 
 void sd_card_gpio_init(sd_card_gpio_config_t *config);
@@ -41,7 +37,6 @@ void sd_card_gpio_init(sd_card_gpio_config_t *config);
 bool sd_card_inserted(void);
 card_result_t sd_card_initialize(void);
 
-card_result_t sd_card_read_sector(uint32_t sector_num,
-                                  uint8_t buff[BLOCK_SIZE_IN_BYTES]);
-
 const sd_card_info_t *sd_card_get_info(void);
+// 'block' = 'sector' = 512 bytes, sd card spec page 234
+card_result_t sd_card_read_sector(uint32_t sector_num, uint8_t buff[512]);

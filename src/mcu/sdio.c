@@ -1,10 +1,9 @@
 #include "sdio.h"
+#include "dma.h"
 #include "registers.h"
 #include "time.h"
 
-void sdio_dma_init(void) {
-  // foo
-}
+static inline void sdio_dma_init(void);
 
 void sdio_init(sdio_config_t *conf) {
   gpio_set_mode(conf->d0, GPIO_MODE_AF);
@@ -55,7 +54,107 @@ void sdio_init(sdio_config_t *conf) {
 
   // placing this here for now. RM0390 pg. 1006
   SDIO->DTIMER = 0xFFFFFFFF; // max timeout
-  // sdio_dma_init();
+  SDIO->DLEN = 512;          // will always remain constant, 512 is block size
+
+  sdio_dma_init();
+}
+
+static inline void sdio_dma_init(void) { RCC->AHB1ENR |= RCC_AHB1ENR_DMA2; }
+
+static inline DMA_stream_t *get_dma_stream(void) { return &DMA2->STREAM[6]; }
+
+#define CMD17 0x11U // read 1 block
+sdio_status_t sdio_read_block(uint32_t sector_num, uint8_t buff[512]) {
+  /*
+    RM0390 pg. 975, READ with DMA
+    1. set SDIO data length register
+    2. program the DMA channel
+    3. program SDIO DCTL, DTEN with 1, DTDIR with 1, DTMODE 0, DMAEN 1,
+    DBLOCKSIZE with 0x9 (512 bytes)
+    4. SDIO arg register with address location of data on card
+    5. SDIO command register CMD17, wait for resp ('1'), CPSMEN.
+    6. wait for CMDREND[6] on STA
+    7. wait for DBCKEND[10] on STA
+    8. wait until FIFO empty, RXOVERR[5]
+
+    RM0390 pg. 976 DMA config
+    1. enable DMA2, clear any pending interrupts
+    2. choice between DMA2_Stream3 (or 6) channel 4 for memory location and
+    DMA2_stream3 (or 6) for channel 4 destination
+    3. dma2_stream3 channel 4 control reg
+    4. dma2_stream3 channel 4 select peripheral as flow controller
+    5. configure incremental burst transfer to 4 beats (at least from
+    peripherlal side)
+    6. enable dma2_stream3 channel 4
+    Note 1: must use DMA in periph flow controller mode.
+    Note 2: sdio generates only DMA burst requests. DMA must be configured in
+    incremental burst mode on periph side
+
+    pg. 215 FIFO burst config combos
+  */
+
+  SDIO->ICR = 0xFFFFFFFF;          // clear all SDIO status flags
+  SDIO->DCTRL = (SDIO_DCTRL_DTEN | //
+                 SDIO_DCTRL_DTDIR_FROM_CARD_TO_CONTROLLER | //
+                 SDIO_DCTRL_DMAEN |                         //
+                 SDIO_DCTRL_DBLOCKSIZE_512);
+
+  // clear any existing flags
+  DMA2->HIFCR = DMA_HIFCR_STREAM_6_ALL_FLAGS;
+
+  DMA_stream_t *stream = get_dma_stream();
+  dma_stream_disable(stream);
+
+  stream->PAR = (uint32_t)&SDIO->FIFO;
+  stream->M0AR = (uint32_t)buff;
+  stream->NDTR = 128; // 512 bytes block size / 4 bytes per word = 128
+
+  stream->CR = (DMA_SxCR_CHSEL_4 |           //
+                DMA_SxCR_DIR_PERIPH_TO_MEM | //
+                DMA_SxCR_PBURST_4_BEATS |    //
+                DMA_SxCR_MBURST_4_BEATS |    //
+                DMA_SxCR_PSIZE_WORD |        //
+                DMA_SxCR_MSIZE_WORD |        //
+                DMA_SxCR_INCR_MEM |          //
+                DMA_SxCR_PERIPH_CONTROLS_FLOW);
+
+  stream->FCR = (DMA_SxFCR_DMDIS | DMA_SxFCR_FIFO_THRESHOLD_FULL);
+
+  dma_stream_enable(stream);
+
+  sdio_status_t status;
+  uint32_t resp;
+  status = sdio_send_cmd(CMD17, sector_num, SDIO_RESP_TYPE_SHORT, &resp);
+  if (status != SDIO_OK) {
+    return status;
+  }
+
+  volatile uint32_t sta;
+  volatile uint32_t dma2_hisr;
+  while (1) {
+    sta = SDIO->STA;
+    dma2_hisr = DMA2->HISR;
+
+    // SDIO errors
+    if (sta & SDIO_STA_DCRCFAIL) {
+      status = SDIO_ERR_DATA_INTEGRITY;
+      break;
+    } else if (sta & SDIO_STA_RXOVERR) {
+      status = SDIO_ERR_FIFO_OVERRUN;
+      break;
+    } else if (sta & SDIO_STA_DTIMEOUT) {
+      status = SDIO_ERR_TIMEOUT;
+      break;
+    }
+
+    // success
+    if (dma2_hisr & DMA_HISR_STREAM_6_TCIF) {
+      status = SDIO_OK;
+      break;
+    }
+  }
+
+  return status;
 }
 
 void sdio_bus_speed_and_width_reset(void) {

@@ -13,7 +13,7 @@ typedef struct {
   bool card_ready;
   uint8_t remaining_init_retries;
   storage_info_t info;
-  uint8_t test_sector[BLOCK_SIZE_IN_BYTES];
+  uint8_t test_sector[512];
 } state_t;
 
 static state_t state;

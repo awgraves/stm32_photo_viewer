@@ -36,11 +36,12 @@ typedef enum {
   SDIO_OK,
   SDIO_ERR_TIMEOUT,
   SDIO_ERR_CRC,
-  SDIO_ERR_CMD
+  SDIO_ERR_CMD,
+  SDIO_ERR_DATA_INTEGRITY,
+  SDIO_ERR_FIFO_OVERRUN,
 } sdio_status_t;
 
 sdio_status_t sdio_send_cmd(uint8_t cmd, uint32_t arg,
                             sdio_resp_type_t resp_type, uint32_t *resp);
 
-void sdio_data_read_set(uint8_t buff[512]);
-sdio_status_t sdio_data_read(void);
+sdio_status_t sdio_read_block(uint32_t sector_num, uint8_t buff[512]);
