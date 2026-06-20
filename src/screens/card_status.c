@@ -38,9 +38,7 @@ screen_t *card_status_handle_event(event_t event) {
 static void bg_draw(void) { renderer_fill_screen(BG_COLOR); }
 
 static void card_status_draw(void) {
-  renderer_draw_rect(0, 0, renderer_get_screen_width() - 1, 16, BG_COLOR);
-  renderer_draw_rect(0, 16, renderer_get_screen_width() - 1, 16, BG_COLOR);
-
+  bg_draw();
   const storage_info_t *info = storage_get_info();
   char *text;
 
@@ -66,5 +64,7 @@ static void card_status_draw(void) {
                        BG_COLOR);
     renderer_draw_text(11 * 16, 16, info->card->name, &ibm_bios_16, TEXT_COLOR,
                        BG_COLOR);
+    renderer_draw_text(0, 64, (char *)storage_get_test_sector(), &ibm_bios_16,
+                       TEXT_COLOR, BG_COLOR);
   }
 }

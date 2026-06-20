@@ -1,4 +1,5 @@
 #include "sd_card.h"
+#include "mcu/registers.h"
 #include "mcu/time.h"
 #include <stdbool.h>
 
@@ -13,9 +14,6 @@ void sd_card_gpio_init(sd_card_gpio_config_t *config) {
 }
 
 bool sd_card_inserted(void) { return gpio_digital_read(conf.det); }
-
-// block = sector = 512 bytes
-#define BLOCK_SIZE_IN_BYTES 512ULL // sd card spec page. 234
 
 // sd spec pg. 224 outlines CID register
 #define CID_PNM_MSB 103
@@ -40,14 +38,16 @@ bool sd_card_inserted(void) { return gpio_digital_read(conf.det); }
 #define ARG_ACMD41 (ACMD41_VOLTAGE_WINDOW | ACMD41_HCS)
 #define CARD_INITIALIZED (1U << 31)  // from successful ACMD41 response
 #define HIGH_CAPACITY_BIT (1U << 30) // from successfuly ACMD41 response
-#define CMD2 0x2                     // request CID (card identification data)
-#define CMD3 0x3                     // request RCA (relative card address)
-#define CMD9 0x9                     // request CSD (card-specific data)
-#define CMD7 0x7                     // select card, place in transfer mode
-#define CMD13 0xD                    // get current card state
-#define CARD_TRANSFER_MODE 0x4 // 4 bit status num 12:9 in CMD13 resp, pg. 122
-#define ACMD6 0x6              // change bus width to 4 bit spec pg. 52
-#define ACMD6_ARG_4_BITS 0x2   // 4 bit width
+#define CMD2 0x2U                    // request CID (card identification data)
+#define CMD3 0x3U                    // request RCA (relative card address)
+#define CMD9 0x9U                    // request CSD (card-specific data)
+#define CMD7 0x7U                    // select card, place in transfer mode
+#define CMD13 0xDU                   // get current card state
+#define CARD_TRANSFER_MODE 0x4U // 4 bit status num 12:9 in CMD13 resp, pg. 122
+#define ACMD6 0x6U              // change bus width to 4 bit spec pg. 52
+#define ACMD6_ARG_4_BITS 0x2U   // 4 bit width
+
+#define CMD17 0x11U // read 1 block
 
 static inline bool is_high_capacity_card(uint32_t raw_resp);
 static inline void save_product_name(const uint32_t raw_resp[4]);
@@ -64,7 +64,7 @@ card_result_t sd_card_initialize(void) {
   if (!sd_card_inserted()) {
     return CARD_ERR_NOT_INSERTED;
   }
-  sdio_reset_bus_speed_and_width();
+  sdio_bus_speed_and_width_reset();
 
   // software reset
   sdio_status_t status;
@@ -77,7 +77,7 @@ card_result_t sd_card_initialize(void) {
   uint32_t short_resp;
   status =
       sdio_send_cmd(CMD8, ARG_VOLTAGE_VAL, SDIO_RESP_TYPE_SHORT, &short_resp);
-  if (status != SDIO_OK || short_resp != ARG_VOLTAGE_VAL) {
+  if (status != SDIO_OK || ((short_resp & 0xFFF) != ARG_VOLTAGE_VAL)) {
     return CARD_ERR_FAILED_VOLTAGE;
   }
 
@@ -140,19 +140,23 @@ card_result_t sd_card_initialize(void) {
 
   /*
     Set bus width to 4
+
+    note: seeing signal integrity issues when prototyping with long jumper
+    wires. will keep bus width to 1 until working with PCB, then can try again.
   */
-  status =
-      sdio_send_cmd(CMD55, card.rca << 16, SDIO_RESP_TYPE_SHORT, &short_resp);
-  if (status != SDIO_OK) {
-    return CARD_ERR_FAILED_BUS_WIDTH_CHANGE;
-  }
+  // sdio_bus_width_set(SDIO_BUS_WIDTH_4);
+  // status =
+  //     sdio_send_cmd(CMD55, card.rca << 16, SDIO_RESP_TYPE_SHORT,
+  //     &short_resp);
+  // if (status != SDIO_OK) {
+  //   return CARD_ERR_FAILED_BUS_WIDTH_CHANGE;
+  // }
 
   status =
       sdio_send_cmd(ACMD6, ACMD6_ARG_4_BITS, SDIO_RESP_TYPE_SHORT, &short_resp);
   if (status != SDIO_OK) {
     return CARD_ERR_FAILED_BUS_WIDTH_CHANGE;
   }
-  sdio_bus_width_set(SDIO_BUS_WIDTH_4);
 
   /*
     Increase bus speed.
@@ -174,6 +178,113 @@ card_result_t sd_card_initialize(void) {
 }
 
 const sd_card_info_t *sd_card_get_info(void) { return &card; }
+
+static inline DMA_stream_t *get_dma_stream(void) { return &DMA2->STREAM[6]; }
+
+static inline void dma_stream_disable(DMA_stream_t *stream) {
+  // write is safe, won't update until all current xfers finish
+  stream->CR &= ~(DMA_SxCR_EN);
+  while (stream->CR & DMA_SxCR_EN)
+    ;
+}
+
+static inline void dma_stream_enable(DMA_stream_t *stream) {
+  stream->CR |= DMA_SxCR_EN;
+  while (!(stream->CR & DMA_SxCR_EN))
+    ;
+}
+
+/*
+
+RM0390 pg. 976 DMA config
+1. enable DMA2, clear any pending interrupts
+2. choice between DMA2_Stream3 (or 6) channel 4 for memory location and
+DMA2_stream3 (or 6) for channel 4 destination
+3. dma2_stream3 channel 4 control reg
+4. dma2_stream3 channel 4 select peripheral as flow controller
+5. configure incremental burst transfer to 4 beats (at least from peripherlal
+side)
+6. enable dma2_stream3 channel 4
+Note 1: must use DMA in periph flow controller mode.
+Note 2: sdio generates only DMA burst requests. DMA must be configured in
+incremental burst mode on periph side
+
+pg. 215 FIFO burst config combos
+
+RM0390 pg. 975, READ with DMA
+1. set SDIO data length register
+2. program the DMA channel
+3. program SDIO DCTL, DTEN with 1, DTDIR with 1, DTMODE 0, DMAEN 1, DBLOCKSIZE
+with 0x9 (512 bytes)
+4. SDIO arg register with address location of data on card
+5. SDIO command register CMD17, wait for resp ('1'), CPSMEN.
+6. wait for CMDREND[6] on STA
+7. wait for DBCKEND[10] on STA
+8. wait until FIFO empty, RXOVERR[5]
+*/
+card_result_t sd_card_read_sector(uint32_t sector_num,
+                                  uint8_t buff[BLOCK_SIZE_IN_BYTES]) {
+  if (sector_num >= card.sector_count)
+    return CARD_ERR_SECTOR_OUT_OF_BOUNDS;
+
+  RCC->AHB1ENR |= RCC_AHB1ENR_DMA2;
+  DMA2->HIFCR = DMA_HIFCR_STREAM_6_ALL_FLAGS;
+  // reset SDIO data path
+  SDIO->DCTRL = 0;
+  SDIO->DLEN = 0;
+  SDIO->ICR = 0xFFFFFFFF; // clear all SDIO status flags
+  delay_ms(1);
+  DMA_stream_t *stream = get_dma_stream();
+  dma_stream_disable(stream);
+
+  stream->PAR = (uint32_t)&SDIO->FIFO;
+  stream->M0AR = (uint32_t)buff;
+  stream->NDTR = 128; // 512 bytes block size / 4 bytes per word = 128
+
+  stream->CR =
+      (DMA_SxCR_CHSEL_4 | DMA_SxCR_DIR_PERIPH_TO_MEM | DMA_SxCR_PBURST_4_BEATS |
+       DMA_SxCR_MBURST_4_BEATS | DMA_SxCR_PSIZE_WORD | DMA_SxCR_MSIZE_WORD |
+       DMA_SxCR_INCR_MEM | DMA_SxCR_PERIPH_CONTROLS_FLOW);
+
+  stream->FCR = (DMA_SxFCR_DMDIS | DMA_SxFCR_FIFO_THRESHOLD_FULL);
+
+  dma_stream_enable(stream);
+
+  SDIO->DLEN = 512;
+  SDIO->DCTRL = (SDIO_DCTRL_DTEN | SDIO_DCTRL_DTDIR_FROM_CARD_TO_CONTROLLER |
+                 SDIO_DCTRL_DMAEN | SDIO_DCTRL_DBLOCKSIZE_512);
+
+  sdio_status_t status;
+  uint32_t resp;
+  status = sdio_send_cmd(CMD17, sector_num, SDIO_RESP_TYPE_SHORT, &resp);
+  if (status != SDIO_OK) {
+    return CARD_ERR_FAILED_READ;
+  }
+
+  SDIO_t *sdio = SDIO;
+  (void)*sdio;
+  while (1) {
+    // success
+    if (DMA2->HISR & DMA_HISR_STREAM_6_TCIF)
+      break;
+
+    // DMA error flags for stream 6 (HISR bits 16-21)
+    // bit 18 = TEIF6 (transfer error), bit 19 = DMEIF6 (direct mode error)
+    // if (dma_hisr & (BIT(18) | BIT(19))) {
+    //  // DMA error — capture and break
+    //  break;
+    //}
+
+    //// SDIO errors
+    // if (sdio_sta & (SDIO_STA_RXOVERR | SDIO_STA_DTIMEOUT |
+    // SDIO_STA_DCRCFAIL)) {
+    //   // SDIO data error — capture and break
+    //   break;
+    // }
+  }
+
+  return CARD_OK;
+}
 
 /*
   Helpers

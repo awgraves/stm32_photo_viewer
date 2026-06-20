@@ -17,3 +17,4 @@ typedef struct {
 void storage_init(void);
 void storage_poll(void);
 const storage_info_t *storage_get_info(void);
+const uint8_t *storage_get_test_sector(void);

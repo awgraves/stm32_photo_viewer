@@ -13,10 +13,12 @@ typedef struct {
   bool card_ready;
   uint8_t remaining_init_retries;
   storage_info_t info;
+  uint8_t test_sector[BLOCK_SIZE_IN_BYTES];
 } state_t;
 
 static state_t state;
 static void status_change(storage_status_t next);
+static void read_first_sector(void);
 
 void storage_init(void) {
   state.card_inserted = sd_card_inserted();
@@ -38,6 +40,8 @@ static void status_change(storage_status_t next) {
   case STORAGE_READY:
     state.card_ready = true;
     state.info.card = sd_card_get_info();
+    read_first_sector();
+    break;
   default:
     break;
   }
@@ -71,5 +75,10 @@ void storage_poll(void) {
     }
   }
 }
+
+static void read_first_sector(void) {
+  sd_card_read_sector(0, state.test_sector);
+}
+const uint8_t *storage_get_test_sector(void) { return state.test_sector; }
 
 const storage_info_t *storage_get_info(void) { return &state.info; };

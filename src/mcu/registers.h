@@ -130,17 +130,33 @@ typedef struct {
 
 // DMA_LISR pg. 222
 #define DMA_LISR_STREAM_3_TCIF (BIT(27)) // signals xfer complete
+// DMA_HISR pg. 223
+#define DMA_HISR_STREAM_6_TCIF (BIT(21))
 
 // DMA_LIFCR pg. 224
 #define DMA_LIFCR_STREAM_3_ALL_FLAGS (0xFU << 24)
+// DMA_HIFCR pg. 224
+#define DMA_HIFCR_STREAM_6_ALL_FLAGS (0xFU << 18)
 
 // DMA_SxCR pg. 225
-#define DMA_SxCR_CHSEL_3 (3U << 25)
-// pg. 227
+#define DMA_SxCR_CHSEL_3 (0x3U << 25)
+#define DMA_SxCR_CHSEL_4 (0x4U << 25)
+#define DMA_SxCR_MBURST_4_BEATS (0x1 << 23)
+#define DMA_SxCR_PBURST_4_BEATS (0x1 << 21)
+// pg. 226
+#define DMA_SxCR_MSIZE_WORD (0x2U << 13)
+#define DMA_SxCR_PSIZE_WORD (0x2U << 11)
 #define DMA_SxCR_INCR_MEM (BIT(10))
-#define DMA_SxCR_DIR_MEM_TO_PERIPH (0x01U << 6)
+// pg. 227
+#define DMA_SxCR_DIR_MEM_TO_PERIPH (0x1U << 6)
+#define DMA_SxCR_DIR_PERIPH_TO_MEM (0x0U << 6)
+#define DMA_SxCR_PERIPH_CONTROLS_FLOW (BIT(5))
 // pg. 228
 #define DMA_SxCR_EN (BIT(0)) // cleared by hardware when DMA end of xfer
+
+// pg. 230 FIFO control register
+#define DMA_SxFCR_DMDIS (BIT(2)) // direct mode disable
+#define DMA_SxFCR_FIFO_THRESHOLD_FULL (0x3U)
 
 // pg. 58
 #define DMA2_BASE (0x40026400)
@@ -214,7 +230,11 @@ typedef struct {
 // RM 0390 pg. 1016, APB2 bus
 typedef struct {
   volatile uint32_t POWER, CLKCR, ARG, CMD, RESPCMD, RESP1, RESP2, RESP3, RESP4,
-      DTIMER, DLEN, DCTRL, DCOUNT, STA, ICR, MASK, FIFOCNT, FIFO[32];
+      DTIMER, DLEN, DCTRL, DCOUNT, STA, ICR, MASK;
+  volatile uint32_t _reserved[2];   // 0x40, 0x44
+  volatile uint32_t FIFOCNT;        // 0x48
+  volatile uint32_t _reserved2[13]; // 0x4C to 0x7C
+  volatile uint32_t FIFO;           // 0x80 (0x40012C80)
 } SDIO_t;
 
 // RM 0390 pg. 58, aka SDMMC
@@ -258,14 +278,15 @@ typedef struct {
 #define SDIO_DCTRL_DTEN (BIT(0))
 
 // RM 0390 pg. 1009 - 1010
-#define SDIO_STA_RXDAVL (BIT(21))  // data is available
-#define SDIO_STA_RXFIFOE (BIT(19)) // all data read
-#define SDIO_STA_RXACT (BIT(13))   // data receive in progress
-#define SDIO_STA_TXACT (BIT(12))   // data transmit in progress
-#define SDIO_STA_CMDACT (BIT(11))  // command xfer in progress
-#define SDIO_STA_DBCKEND (BIT(10)) // block sent/received (CRC check pass)
-#define SDIO_STA_DATAEND (BIT(8))  // data end (data counter is zero)
-#define SDIO_STA_CMDSENT (BIT(7))  // command sent (no response required)
+#define SDIO_STA_RXDAVL (BIT(21))   // data is available
+#define SDIO_STA_RXFIFOE (BIT(19))  // all data read
+#define SDIO_STA_RXFIFOHF (BIT(15)) // at least 8 words in FIFO
+#define SDIO_STA_RXACT (BIT(13))    // data receive in progress
+#define SDIO_STA_TXACT (BIT(12))    // data transmit in progress
+#define SDIO_STA_CMDACT (BIT(11))   // command xfer in progress
+#define SDIO_STA_DBCKEND (BIT(10))  // block sent/received (CRC check pass)
+#define SDIO_STA_DATAEND (BIT(8))   // data end (data counter is zero)
+#define SDIO_STA_CMDSENT (BIT(7))   // command sent (no response required)
 #define SDIO_STA_CMDREND                                                       \
   (BIT(6)) // command response received (CRC check passed)
 #define SDIO_STA_RXOVERR (BIT(5))  // FIFO overrun error

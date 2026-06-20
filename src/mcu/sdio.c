@@ -2,6 +2,10 @@
 #include "registers.h"
 #include "time.h"
 
+void sdio_dma_init(void) {
+  // foo
+}
+
 void sdio_init(sdio_config_t *conf) {
   gpio_set_mode(conf->d0, GPIO_MODE_AF);
   gpio_set_mode(conf->d1, GPIO_MODE_AF);
@@ -17,12 +21,14 @@ void sdio_init(sdio_config_t *conf) {
   gpio_set_AF(conf->cmd, GPIO_AF_SDIO);
   gpio_set_AF(conf->clk, GPIO_AF_SDIO);
 
-  gpio_set_ospeed(conf->d0, GPIO_SPEED_HIGH);
-  gpio_set_ospeed(conf->d1, GPIO_SPEED_HIGH);
-  gpio_set_ospeed(conf->d2, GPIO_SPEED_HIGH);
-  gpio_set_ospeed(conf->d3, GPIO_SPEED_HIGH);
-  gpio_set_ospeed(conf->cmd, GPIO_SPEED_HIGH);
-  gpio_set_ospeed(conf->clk, GPIO_SPEED_HIGH);
+  // There was signal integrity issues when speed set higher
+  // unclear if can/should increase speed once on a PCB?
+  gpio_set_ospeed(conf->d0, GPIO_SPEED_MEDIUM);
+  gpio_set_ospeed(conf->d1, GPIO_SPEED_MEDIUM);
+  gpio_set_ospeed(conf->d2, GPIO_SPEED_MEDIUM);
+  gpio_set_ospeed(conf->d3, GPIO_SPEED_MEDIUM);
+  gpio_set_ospeed(conf->cmd, GPIO_SPEED_MEDIUM);
+  gpio_set_ospeed(conf->clk, GPIO_SPEED_MEDIUM);
   /*
     My Adafruit sd card module already has external pullup resistors,
     but adding some internal ones here as fallbacks in case future board
@@ -45,10 +51,14 @@ void sdio_init(sdio_config_t *conf) {
   // power up the SDIO state machine
   SDIO->POWER = SDIO_POWER_ON;
 
-  sdio_reset_bus_speed_and_width();
+  sdio_bus_speed_and_width_reset();
+
+  // placing this here for now. RM0390 pg. 1006
+  SDIO->DTIMER = 0xFFFFFFFF; // max timeout
+  // sdio_dma_init();
 }
 
-void sdio_reset_bus_speed_and_width(void) {
+void sdio_bus_speed_and_width_reset(void) {
   // freq must be slow during identification phase
   sdio_ck_freq_set(SDIO_CK_FREQ_400KHZ);
   sdio_bus_width_set(SDIO_BUS_WIDTH_1);
@@ -89,7 +99,7 @@ void sdio_bus_width_set(sdio_bus_width_t width) {
   sdio_ck_disable();
   SDIO->CLKCR &= ~(SDIO_CLKCR_BUS_WIDTH_CLEAR_BITS);
   delay_ms(1);
-  SDIO->CLKCR |= width;
+  SDIO->CLKCR |= SDIO_CLKCR_BUS_WIDTH(width);
   sdio_ck_enable();
   delay_ms(1);
 }

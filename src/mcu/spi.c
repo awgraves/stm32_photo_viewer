@@ -85,6 +85,8 @@ static inline void dma_stream_disable(DMA_stream_t *stream) {
 
 static inline void dma_stream_enable(DMA_stream_t *stream) {
   stream->CR |= DMA_SxCR_EN;
+  while (!(stream->CR & DMA_SxCR_EN))
+    ;
 }
 
 void spi_dma_init(spi_t *spi) {

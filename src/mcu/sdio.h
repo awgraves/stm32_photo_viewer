@@ -20,7 +20,7 @@ typedef enum {
 typedef enum { SDIO_BUS_WIDTH_1, SDIO_BUS_WIDTH_4 } sdio_bus_width_t;
 
 void sdio_init(sdio_config_t *conf);
-void sdio_reset_bus_speed_and_width(void);
+void sdio_bus_speed_and_width_reset(void);
 void sdio_ck_freq_set(sdio_ck_freq_t freq);
 void sdio_bus_width_set(sdio_bus_width_t width);
 
@@ -41,3 +41,6 @@ typedef enum {
 
 sdio_status_t sdio_send_cmd(uint8_t cmd, uint32_t arg,
                             sdio_resp_type_t resp_type, uint32_t *resp);
+
+void sdio_data_read_set(uint8_t buff[512]);
+sdio_status_t sdio_data_read(void);
