@@ -44,6 +44,7 @@ void ili9341_init(ili9341_config_t *c) {
   gpio_set_mode(io.cs, GPIO_MODE_OUTPUT);
   gpio_set_mode(io.dc, GPIO_MODE_OUTPUT);
   gpio_set_mode(io.rst, GPIO_MODE_OUTPUT);
+  gpio_set_mode(io.bl, GPIO_MODE_OUTPUT);
 
   // ensure off before hard reset
   end_tx();
@@ -64,6 +65,9 @@ void ili9341_init(ili9341_config_t *c) {
 
   write_cmd(CMD_DISPLAY_ON);
   end_tx();
+
+  // turn on backlight
+  gpio_digital_write(io.bl, HIGH);
 }
 
 void ili9341_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {

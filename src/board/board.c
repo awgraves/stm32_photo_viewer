@@ -11,6 +11,7 @@
 #define LCD_CS PA9
 #define LCD_DC PA8
 #define LCD_RST PA10
+#define LCD_BL PA11
 
 #define ENC_A PA0 // TIM2_CH1 AF datasheet pg 46
 #define ENC_B PA1 // TIM2_CH2 AF
@@ -25,6 +26,13 @@
 #define SDIO_CMD PD2
 #define SD_DET PC6
 
+/*
+Note that SWDIO is on PA13
+and SWDCLK is on PA14
+
+also note nucleo board manual pg. 36 for board pin layout
+*/
+
 void board_init(void) {
   sysclock_init(CPU_FREQ_48_MHZ);
   time_init();
@@ -36,7 +44,7 @@ void board_init(void) {
 
   /* Drivers */
   ili9341_config_t lcd_conf = {
-      .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST};
+      .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST, .bl = LCD_BL};
   ili9341_init(&lcd_conf);
 
   rotary_encoder_config_t rot_conf = {.sw1 = ENC_CENTER,

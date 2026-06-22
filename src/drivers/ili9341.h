@@ -14,6 +14,7 @@ typedef struct {
   gpio_pin_t cs;
   gpio_pin_t dc;
   gpio_pin_t rst;
+  gpio_pin_t bl;
 } ili9341_config_t;
 
 void ili9341_init(ili9341_config_t *config);
