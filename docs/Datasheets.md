@@ -7,3 +7,7 @@
 3. STM32 Reference Manual (RM0390): https://www.st.com/resource/en/reference_manual/rm0390-stm32f446xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf
 
 4. ARM cortex-M4 general manual: https://www.manualslib.com/manual/1231314/Arm-Cortex-M4.html
+
+
+Electronic parts:
+1. https://www.diodes.com/assets/Datasheets/AP2112.pdf
