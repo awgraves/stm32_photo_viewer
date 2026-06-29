@@ -1,4 +1,9 @@
 # Notes from the docs
+ILI9341 and ST7796 LCD drivers both share essentially the same commands.
+The differences lie in the height/width and desired portrait vs landscape orientation.
+
+## ST7796 documentation
+https://www.displayfuture.com/Display/datasheet/controller/ST7796s.pdf
 
 ## Waveshare documentation
 https://www.waveshare.com/wiki/2.4inch_LCD_Module#Introduction
