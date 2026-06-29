@@ -4,6 +4,7 @@
 CC=arm-none-eabi-gcc
 GDB=arm-none-eabi-gdb
 OBJ_SIZE=arm-none-eabi-size
+DISPLAY_DRIVER ?= ILI9341
 
 LS_PATH=./src/mcu/link.ld
 BUILD_DIR=./build
@@ -27,7 +28,6 @@ SOURCES = mcu/startup.c \
 					mcu/gpio.c \
 					mcu/spi.c \
 					mcu/sdio.c \
-					drivers/ili9341.c \
 					drivers/rotary_encoder.c \
 					drivers/sd_card.c \
 					board/board.c \
@@ -43,6 +43,16 @@ SOURCES = mcu/startup.c \
 					screens/card_status.c \
 					main.c
 
+ifeq ($(DISPLAY_DRIVER), ILI9341)
+	CFLAGS += -DDISPLAY_DRIVER_ILI9341
+	SOURCES += drivers/displays/ili9341.c
+else ifeq ($(DISPLAY_DRIVER), ST7796)
+	CFLAGS += -DDISPLAY_DRIVER_ST7796
+	SOURCES += drivers/displays/st7796.c
+else
+	$(error Unknown DISPLAY_DRIVER: $(DISPLAY_DRIVER))
+endif
+
 OBJ_NAMES = $(SOURCES:.c=.o)
 OBJECTS = $(addprefix $(OBJ_DIR)/,$(OBJ_NAMES))
 
@@ -52,15 +62,15 @@ OBJECTS = $(addprefix $(OBJ_DIR)/,$(OBJ_NAMES))
 build: $(BUILD_DIR)/code.elf
 	@$(OBJ_SIZE) $(BUILD_DIR)/code.elf
 
+@phony setup:
+	bear -- make -B
+
 $(BUILD_DIR)/code.elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 $(OBJ_DIR)/%.o: src/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -o $@ $^
-
-compile_commands :
-	bear -- make -B
 
 clean:
 	rm -rf build/*

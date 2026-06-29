@@ -1,7 +1,7 @@
-#include "ili9341.h"
+#include "base.h"
 #include "mcu/time.h"
 
-/* Commands begin on ili9341 datasheet pg. 83 */
+/* Commands begin on display datasheet pg. 83 */
 #define CMD_NOOP 0x00
 #define CMD_SOFTWARE_RESET 0x01
 #define CMD_SLEEP_OUT 0x11
@@ -24,7 +24,7 @@
 
 #define CMD_MEM_WRITE 0x2C
 
-static ili9341_config_t io;
+static display_config_t io;
 
 void begin_tx(void) { gpio_clear_pin(io.cs); }
 void end_tx(void) { gpio_set_pin(io.cs); }
@@ -38,7 +38,7 @@ static void hard_reset(void);
   Public API
 */
 
-void ili9341_init(ili9341_config_t *c) {
+void display_init(display_config_t *c) {
   io = *c;
 
   gpio_set_mode(io.cs, GPIO_MODE_OUTPUT);
@@ -70,7 +70,7 @@ void ili9341_init(ili9341_config_t *c) {
   gpio_digital_write(io.bl, HIGH);
 }
 
-void ili9341_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
+void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   begin_tx();
 
   write_cmd(CMD_COLUMN_ADDR_SET);
@@ -88,18 +88,18 @@ void ili9341_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
   end_tx();
 }
 
-void ili9341_pixel_stream_begin(void) {
+void display_pixel_stream_begin(void) {
   begin_tx();
   write_cmd(CMD_MEM_WRITE);
   gpio_set_pin(io.dc);
 }
 
-void ili9341_pixel_stream_end(void) {
+void display_pixel_stream_end(void) {
   write_cmd(CMD_NOOP);
   end_tx();
 }
 
-void ili9341_pixel_stream_write(const uint16_t *pixels, uint16_t count) {
+void display_pixel_stream_write(const uint16_t *pixels, uint16_t count) {
   // SPI must operate in 8-bit mode although pixels must be 16bits.
   spi_tx(io.spi, (uint8_t *)pixels, count * 2);
 }

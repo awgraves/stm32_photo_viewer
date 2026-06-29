@@ -1,5 +1,5 @@
 #include "board.h"
-#include "drivers/ili9341.h"
+#include "drivers/display.h"
 #include "drivers/rotary_encoder.h"
 #include "drivers/sd_card.h"
 #include "mcu/spi.h"
@@ -43,9 +43,9 @@ void board_init(void) {
   spi_init(&spi1, &spi1_conf);
 
   /* Drivers */
-  ili9341_config_t lcd_conf = {
+  display_config_t display_conf = {
       .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST, .bl = LCD_BL};
-  ili9341_init(&lcd_conf);
+  display_init(&display_conf);
 
   rotary_encoder_config_t rot_conf = {.sw1 = ENC_CENTER,
                                       .enca = ENC_A,

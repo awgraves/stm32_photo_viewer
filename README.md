@@ -16,4 +16,10 @@ Built 100% by hand from scratch.
 
 ## Schematics
 ![EasyEDA Board Schematics](./docs/schematics/stm32_photo_viewer_schematics.png)
+## Requirements
+1. [GNU Arm Embedded Toolchain](https://developer.arm.com/downloads/-/gnu-rm)
+2. [GNU Make](https://www.gnu.org/software/make/)
+3. [Bear](https://github.com/rizsotto/Bear) (for clangd compile_commands generation)
 
+## Local Dev Setup
+1. Run `make setup` to generate the clangd compile commands for your IDE.
