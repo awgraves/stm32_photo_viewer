@@ -58,7 +58,7 @@ void splash_show(void) {
   uint16_t copyright_x =
       renderer_get_centered_x(terminus_bold_16.width_px * 14); // 14 chars
   uint16_t copyright_y =
-      renderer_get_screen_height() - (terminus_bold_16.height_px * 2);
+      DISPLAY_HEIGHT_PIXELS - (terminus_bold_16.height_px * 2);
   renderer_draw_text(copyright_x, copyright_y, "Copyright 2026",
                      &terminus_bold_16, COLOR_SPLASH_GREY, COLOR_WHITE);
 

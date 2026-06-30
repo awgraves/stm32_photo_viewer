@@ -7,8 +7,8 @@
 
 #define WINDOW_OUTER_X_START 19
 #define WINDOW_OUTER_Y_START 19
-#define WINDOW_OUTER_WIDTH 280
-#define WINDOW_OUTER_HEIGHT (240 - (WINDOW_OUTER_Y_START * 2))
+#define WINDOW_OUTER_WIDTH DISPLAY_WIDTH_PIXELS - 40 // 280
+#define WINDOW_OUTER_HEIGHT (DISPLAY_HEIGHT_PIXELS - (WINDOW_OUTER_Y_START * 2))
 #define WINDOW_PADDING 2
 #define WINDOW_INNER_X_START (WINDOW_OUTER_X_START + WINDOW_PADDING)
 #define WINDOW_INNER_Y_START (WINDOW_OUTER_Y_START + WINDOW_PADDING)
@@ -46,6 +46,7 @@ screen_t menu = {.enter = menu_enter, .handle_event = menu_handle_event};
 static void menu_draw(void);
 static void menu_move_up(void);
 static void menu_move_down(void);
+
 /*
  Public API
 */
@@ -84,7 +85,9 @@ static inline void menu_draw_window(void) {
   renderer_draw_rect(WINDOW_INNER_X_START, WINDOW_INNER_Y_START,
                      WINDOW_INNER_WIDTH, WINDOW_INNER_HEIGHT, COLOR_BLUE_ALT);
 
-  renderer_draw_text(47, (WINDOW_OUTER_Y_START - 8), " Image Viewer ",
+  uint16_t title_x =
+      renderer_get_centered_x(ibm_bios_16.width_px * 14); // 14 chars
+  renderer_draw_text(title_x, (WINDOW_OUTER_Y_START - 8), " Photo Viewer ",
                      &ibm_bios_16, TEXT_COLOR, BG_COLOR);
 }
 

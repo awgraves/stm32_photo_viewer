@@ -1,10 +1,9 @@
 #pragma once
 #include "bitmap.h"
 #include "color.h"
+#include "drivers/display_dimensions.h"
 #include "font.h"
 
-uint16_t renderer_get_screen_height(void);
-uint16_t renderer_get_screen_width(void);
 uint16_t renderer_get_centered_x(uint16_t width);
 uint16_t renderer_get_centered_y(uint16_t height);
 

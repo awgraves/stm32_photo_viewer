@@ -16,11 +16,9 @@ int main() {
 
   storage_init();
 
-  splash_show();
-  while (1)
-    ;
+  // splash_show();
 
-  curr_screen = &card_status;
+  curr_screen = &menu;
   curr_screen->enter();
 
   uint32_t last_poll = 0;
