@@ -2,6 +2,7 @@
 #include "mcu/timer.h"
 
 #define SWITCH_DEBOUNCE_THRESHOLD 5
+#define ENCODER_PULSES_PER_DETENT 4
 
 typedef struct {
   // switch
@@ -44,10 +45,15 @@ static bool rotary_encoder_button_poll(void);
 
 rotary_state_t rotary_encoder_get_state(void) {
   uint16_t curr_cnt = timer_get_cnt(io.timer);
-  int16_t delta = curr_cnt - io.last_timer_cnt;
-  io.last_timer_cnt = curr_cnt;
+  int16_t raw_delta = curr_cnt - io.last_timer_cnt;
 
-  rotary_state_t state = {.delta = delta,
+  // only register detents (full 'click') as a movement
+  int16_t detents = raw_delta / ENCODER_PULSES_PER_DETENT;
+  if (detents != 0) {
+    io.last_timer_cnt += detents * ENCODER_PULSES_PER_DETENT;
+  }
+
+  rotary_state_t state = {.delta = detents,
                           .button_pressed = rotary_encoder_button_poll()};
 
   return state;

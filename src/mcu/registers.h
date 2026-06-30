@@ -216,7 +216,8 @@ typedef struct {
 // RM0390 pg. 548 (control reg1)
 #define TIMx_CR1_CEN (BIT(0))
 // RM0390 pg. 552 (slave mode control)
-#define TIMx_SMCR_SMS_T1_EDGE (0x2U)
+#define TIMx_SMCR_SMS_T1_EDGE_TRIGGERS (0x2U)
+#define TIMx_SMCR_SMS_BOTH_EDGES_TRIGGER (0x3U)
 // RM0390 pg. 557 - 558 (capture/compare mode register)
 // input capture 1 and 2 filters
 #define TIMx_CCMR1_IC2F_4_SAMPLES ((0x2) << 12)

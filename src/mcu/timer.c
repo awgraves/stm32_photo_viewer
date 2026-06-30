@@ -28,16 +28,16 @@ void timer_init(timer_t *tim, timer_config_t *config) {
     Counter counts continuously between 0 and auto-reload value in TIMx_ARR.
     ARR must be configured before starting.
 
-    I'm hard-coding certain settings here that work well for my Adafruit ANO
-    quadrature encoder. This keeps things simple for right now.
+    I'm hard-coding certain settings here that work well for my EC11
+   quadrature encoder. This keeps things simple for right now.
     If I needed to support additional hardware, I'd pass
     these in as flexible config values instead, at the cost of greater config
     complexity.
     */
 
-    // Trigger on channel A (T1) edge (1 incr/decr per click on my specific
-    // encoder)
-    tim->regs->SMCR |= TIMx_SMCR_SMS_T1_EDGE;
+    // Trigger counter updates on both channel A (T1) edges and channel B (T2)
+    // edges
+    tim->regs->SMCR |= TIMx_SMCR_SMS_BOTH_EDGES_TRIGGER;
     // set 4 times sampling on inputs to filter out noise
     tim->regs->CCMR1 |= (TIMx_CCMR1_IC1F_4_SAMPLES | TIMx_CCMR1_IC2F_4_SAMPLES);
     // configure as active low
