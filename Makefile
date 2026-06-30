@@ -33,7 +33,6 @@ SOURCES = mcu/startup.c \
 					drivers/sd_card.c \
 					board/board.c \
 					graphics/renderer.c \
-					assets/logos/splash_logo.c \
 					assets/fonts/ibm_bios_16.c \
 					assets/fonts/terminus_bold_16.c \
 					events/event_queue.c \
@@ -46,8 +45,11 @@ SOURCES = mcu/startup.c \
 
 ifeq ($(DISPLAY_DRIVER), ILI9341)
 	CFLAGS += -DDISPLAY_DRIVER_ILI9341
+	SOURCES += assets/logos/splash_logo_small.c
+
 else ifeq ($(DISPLAY_DRIVER), ST7796)
 	CFLAGS += -DDISPLAY_DRIVER_ST7796
+	SOURCES += assets/logos/splash_logo_large.c
 else
 	$(error Unknown DISPLAY_DRIVER: $(DISPLAY_DRIVER))
 endif

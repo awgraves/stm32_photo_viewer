@@ -3,7 +3,7 @@
 #include "inputs/poll.h"
 #include "mcu/time.h"
 #include "screens/screens.h"
-// #include "screens/splash.h"
+#include "screens/splash.h"
 #include "storage/storage.h"
 
 #define POLL_MS_INTERVAL 10
@@ -16,7 +16,9 @@ int main() {
 
   storage_init();
 
-  // splash_show();
+  splash_show();
+  while (1)
+    ;
 
   curr_screen = &card_status;
   curr_screen->enter();
