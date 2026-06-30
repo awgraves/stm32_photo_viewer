@@ -32,6 +32,34 @@ const config_t mhz48 = {
     .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
 };
 
+const config_t mhz56 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_1,
+    .plln = RCC_PLLCFGR_PLLN(336),            // VCO becomes 336Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 336 / 6 = 56mhz
+    .pllq = RCC_PLLCFGR_PLLQ(7)               // 336 / 7 = 48mhz
+};
+
+const config_t mhz60 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_1,
+    .plln = RCC_PLLCFGR_PLLN(240),            // VCO becomes 240Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4), // 240 / 4 = 60mhz
+    .pllq = RCC_PLLCFGR_PLLQ(5)               // 240 / 5 = 48mhz
+};
+
+const config_t mhz84 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_2,
+    .plln = RCC_PLLCFGR_PLLN(336),            // VCO becomes 336Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 336 / 6 = 86mhz
+    .pllq = RCC_PLLCFGR_PLLQ(7)               // 336 / 7 = 48mhz
+};
+
+const config_t mhz96 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_3,
+    .plln = RCC_PLLCFGR_PLLN(192),            // VCO becomes 192Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_2), // 192 / 2 = 96mhz
+    .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
+};
+
 /*
 See RM0390 pg 118 clock diagram
 */
@@ -51,6 +79,18 @@ void sysclock_init(cpu_freq_t freq) {
     break;
   case CPU_FREQ_48_MHZ:
     config = &mhz48;
+    break;
+  case CPU_FREQ_56_MHZ:
+    config = &mhz56;
+    break;
+  case CPU_FREQ_60_MHZ:
+    config = &mhz60;
+    break;
+  case CPU_FREQ_84_MHZ:
+    config = &mhz84;
+    break;
+  case CPU_FREQ_96_MHZ:
+    config = &mhz96;
     break;
   }
 
@@ -93,7 +133,6 @@ void sysclock_init(cpu_freq_t freq) {
 
     PLLP: divisor of the VCO, options are limited to 2, 4, 6, 8
     Output result must not exceed 180Mhz
-    Going with 4 so that 128 / 4 = 32 mhz (target)
 
     PLLQ: divisor of VCO that should produce a final result of 48mhz.
     Must be between 2 and 15 (inclusive)

@@ -79,7 +79,9 @@ typedef struct {
 
 #define FLASH_ACR_ICEN (BIT(9))
 #define FLASH_ACR_PRFTEN (BIT(8))
-#define FLASH_ACR_LATENCY_1 ((0x1 & 0xF) << 0)
+#define FLASH_ACR_LATENCY_1 (0x1 << 0)
+#define FLASH_ACR_LATENCY_2 (0x2 << 0)
+#define FLASH_ACR_LATENCY_3 (0x3 << 0)
 
 // RM0390 pg. 191
 // struct total 4 bytes (32 bit) x 10 fields = 40 bytes
