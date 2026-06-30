@@ -1,7 +1,8 @@
 #include "rotary_encoder.h"
+#include "mcu/time.h"
 #include "mcu/timer.h"
 
-#define SWITCH_DEBOUNCE_THRESHOLD 5
+#define SWITCH_DEBOUNCE_MS 10
 #define ENCODER_PULSES_PER_DETENT 4
 
 typedef struct {
@@ -9,7 +10,7 @@ typedef struct {
   gpio_pin_t sw1;
   gpio_digital_t sw_state_stable;
   gpio_digital_t sw_state_last_sample;
-  uint8_t sw_samples_remaining;
+  uint32_t sw_last_change_tick;
 
   // rotary
   timer_t *timer;
@@ -22,7 +23,7 @@ void rotary_encoder_init(rotary_encoder_config_t *config) {
   io.sw1 = config->sw1;
   io.sw_state_stable = HIGH;
   io.sw_state_last_sample = HIGH;
-  io.sw_samples_remaining = SWITCH_DEBOUNCE_THRESHOLD;
+  io.sw_last_change_tick = millis();
   io.timer = config->timer;
   io.last_timer_cnt = timer_get_cnt(config->timer);
 
@@ -65,18 +66,15 @@ rotary_state_t rotary_encoder_get_state(void) {
 
 static bool rotary_encoder_button_poll(void) {
   gpio_digital_t curr = gpio_digital_read(io.sw1);
+  uint32_t now = millis();
 
-  if (curr == io.sw_state_last_sample) {
-    if (io.sw_samples_remaining > 0) {
-      io.sw_samples_remaining--;
-    }
-  } else {
-    io.sw_samples_remaining = SWITCH_DEBOUNCE_THRESHOLD;
+  if (curr != io.sw_state_last_sample) {
+    io.sw_state_last_sample = curr;
+    io.sw_last_change_tick = now;
   }
-  io.sw_state_last_sample = curr;
 
-  if (io.sw_samples_remaining == 0) {
-    io.sw_state_stable = curr;
+  if ((now - io.sw_last_change_tick) >= SWITCH_DEBOUNCE_MS) {
+    io.sw_state_stable = io.sw_state_last_sample;
   }
 
   // active low
