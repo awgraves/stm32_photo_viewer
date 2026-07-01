@@ -2,9 +2,9 @@
 #include <stdint.h>
 
 /*
-ili9341 driver casts these as uint8[] because of 8-bit spi.
-due to arm being little endian, 8F00 becomes 00,8F over the wire
-so swapping them preemptively saves performance
+The display driver casts these as uint8[] because of 8-bit spi.
+Due to ARM M-4 CPU being little endian, 8F00 becomes 00 8F over the wire.
+Therefore, need to swap these values to match expected transport layer ordering.
 */
 #define RGB565(x) (uint16_t)((x >> 8) | (x << 8))
 

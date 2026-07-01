@@ -26,6 +26,7 @@ typedef enum {
   CARD_ERR_SECTOR_OUT_OF_BOUNDS,
   CARD_ERR_FAILED_READ,
 } card_result_t;
+
 typedef struct {
   char name[6];
   uint16_t rca;
