@@ -12,9 +12,10 @@ typedef enum {
 typedef struct {
   storage_status_t status;
   const sd_card_info_t *card;
+  // TODO: add available files list
 } storage_info_t;
 
 void storage_init(void);
+
 void storage_poll(void);
 const storage_info_t *storage_get_info(void);
-const uint8_t *storage_get_test_sector(void);

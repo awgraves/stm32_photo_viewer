@@ -64,7 +64,5 @@ static void card_status_draw(void) {
                        BG_COLOR);
     renderer_draw_text(11 * 16, 16, info->card->name, &ibm_bios_16, TEXT_COLOR,
                        BG_COLOR);
-    renderer_draw_text(0, 64, (char *)storage_get_test_sector(), &ibm_bios_16,
-                       TEXT_COLOR, BG_COLOR);
   }
 }

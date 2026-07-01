@@ -18,7 +18,7 @@ int main() {
 
   // splash_show();
 
-  curr_screen = &menu;
+  curr_screen = &card_status;
   curr_screen->enter();
 
   uint32_t last_poll = 0;
