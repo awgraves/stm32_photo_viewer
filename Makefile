@@ -38,6 +38,7 @@ SOURCES = mcu/startup.c \
 					events/event_queue.c \
 					inputs/poll.c \
 					storage/storage.c \
+					storage/fat32.c \
 					screens/splash.c \
 					screens/menu.c \
 					screens/card_status.c \

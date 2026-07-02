@@ -49,8 +49,11 @@ static void card_status_draw(void) {
   case STORAGE_INITIALIZING:
     text = "Initializing...";
     break;
-  case STORAGE_ERROR:
-    text = "STORAGE ERROR";
+  case STORAGE_ERR_CARD_INIT_FAILURE:
+    text = "FAILED TO INIT CARD";
+    break;
+  case STORAGE_ERR_FS_MOUNT_FAILURE:
+    text = "FAILED TO MOUNT FS";
     break;
   case STORAGE_READY:
     text = "Storage READY!";

@@ -1,26 +1,12 @@
 #include "storage.h"
 #include "drivers/sd_card.h"
 #include "events/event_queue.h"
+#include "fat32.h"
 #include "mcu/time.h"
 #include <stdbool.h>
 
 #define INIT_DELAY_MS 1000 // quick and dirty, ~1 sec at 10 ms poll interval
 #define INIT_MAX_RETRIES 3
-
-/*
-  Used combination of wikipedia and
-  https://www.pjrc.com/tech/8051/ide/fat32.html
-  to determine these
-*/
-typedef struct {
-  uint32_t partition_lba;
-  uint32_t fat_begin_lba;
-  uint32_t cluster_begin_lba;
-  uint32_t sectors_per_cluster;
-  uint32_t root_dir_first_cluster;
-} fat32_t;
-
-static fat32_t fs;
 
 typedef struct {
   // init values
@@ -30,20 +16,49 @@ typedef struct {
   uint8_t remaining_init_retries;
   // public info
   storage_info_t info;
-  // private info
-  uint8_t sector_buff[512];
 } state_t;
 
-static state_t state;
+static state_t state = {0};
 static void status_change(storage_status_t next);
-static bool parse_mbr(void);
-static bool parse_vbr(void);
+static void check_card_insertion(void);
+static void attempt_initialization(void);
 
-void storage_init(void) {
-  state.card_inserted = sd_card_inserted();
-  if (state.card_inserted) {
-    status_change(STORAGE_INITIALIZING);
+void storage_poll(void) {
+  check_card_insertion();
+
+  if (state.info.status == STORAGE_INITIALIZING) {
+    if (millis() - state.last_init_attempt_ms >= INIT_DELAY_MS) {
+      attempt_initialization();
+    }
   }
+}
+
+const storage_info_t *storage_get_info(void) { return &state.info; };
+
+static void check_card_insertion(void) {
+  bool inserted = sd_card_inserted();
+  if (inserted && !state.card_inserted) {
+    status_change(STORAGE_INITIALIZING);
+  } else if (!inserted && state.card_inserted) {
+    status_change(STORAGE_NO_MEDIA);
+  }
+
+  state.card_inserted = sd_card_inserted();
+}
+
+static void attempt_initialization(void) {
+  if (sd_card_initialize() == CARD_OK) {
+    if (fat32_mount() == FAT32_OK) {
+      status_change(STORAGE_READY);
+    } else {
+      status_change(STORAGE_ERR_FS_MOUNT_FAILURE);
+    }
+  } else if (state.remaining_init_retries > 0) {
+    state.remaining_init_retries--;
+    state.last_init_attempt_ms = millis();
+  } else {
+    status_change(STORAGE_ERR_CARD_INIT_FAILURE);
+  };
 }
 
 static void status_change(storage_status_t next) {
@@ -69,117 +84,3 @@ static void status_change(storage_status_t next) {
   }
   state.info.status = next;
 }
-
-void storage_poll(void) {
-  // check physical layer first
-  bool inserted = sd_card_inserted();
-  if (inserted && !state.card_inserted) {
-    status_change(STORAGE_INITIALIZING);
-  } else if (!inserted && state.card_inserted) {
-    status_change(STORAGE_NO_MEDIA);
-  }
-  state.card_inserted = sd_card_inserted();
-
-  if (state.info.status == STORAGE_INITIALIZING) {
-    if (millis() - state.last_init_attempt_ms >= INIT_DELAY_MS) {
-      if (sd_card_initialize() == CARD_OK) {
-        // TODO, parse the FS
-        parse_mbr();
-        parse_vbr();
-        status_change(STORAGE_READY);
-      } else if (state.remaining_init_retries > 0) {
-        state.remaining_init_retries--;
-        state.last_init_attempt_ms = millis();
-      } else {
-        status_change(STORAGE_ERROR);
-      };
-    }
-  }
-}
-
-// mbr == "Master Boot Record", is first sector of disk
-static bool parse_mbr(void) {
-  card_result_t res = sd_card_read_sector(0, state.sector_buff);
-  if (res != CARD_OK) {
-    return false;
-  }
-  /*
-    Per wikipedia: https://en.wikipedia.org/wiki/Master_boot_record
-
-    MBR partition 1 entry (16 bytes) starting at 0x01BE, ei byte 446
-
-    Within that entry:
-     - LBA of first absolute sector at offset 0x08 (4 bytes long)
-     - Num of sectors in partition at offset 0x0C (4 bytes long)
-
-    All values stored in little endian, so fine to directly cast as uint32
-
-    The last 2 bytes should be 0x55 and 0xAA.
-  */
-  uint16_t mbr_signature = *(uint16_t *)&state.sector_buff[512 - 2];
-  // becomes AA55 (swapped) when cast to a 16bit num
-  if (mbr_signature != 0xAA55) {
-    return false;
-  }
-
-  // for simplicity, always using the first partition of SD card
-  fs.partition_lba = *(uint32_t *)&state.sector_buff[446 + 8];
-  return true;
-}
-
-// based on data table from https://wiki.osdev.org/FAT
-typedef struct __attribute__((packed)) {
-  uint8_t unused_1[11];
-  uint16_t bytes_per_sector; // offset 0x0B
-  uint8_t sectors_per_cluster;
-  uint16_t num_reserved_sectors;
-  uint8_t num_fats; // offset 0x10, ie 17th item, value is often '2'
-  uint8_t unused_2[19];
-  uint32_t sectors_per_fat; // offset 0x24
-  uint8_t unused_3[4];
-  uint32_t root_dir_first_cluster; // offset 0x02C, value is often '2'
-  uint8_t unused_4[462];
-  uint16_t signature; // offset 0x1FE, should be 0xAA55
-} vbr_t;
-
-_Static_assert(sizeof(vbr_t) == 512, "vbr_t must be exactly 512 bytes");
-
-static uint32_t get_cluster_lba(uint32_t cluster_num) {
-  return fs.cluster_begin_lba + (cluster_num - 2) * fs.sectors_per_cluster;
-}
-
-// vbr == "Volume Boot Record", is first sector of the partition.
-// In this case, should contain the FAT32 FS info.
-static bool parse_vbr(void) {
-  card_result_t res = sd_card_read_sector(fs.partition_lba, state.sector_buff);
-  if (res != CARD_OK) {
-    return false;
-  }
-
-  vbr_t *vbr = (vbr_t *)state.sector_buff;
-
-  if (vbr->signature != 0xAA55) {
-    return false;
-  }
-
-  if (vbr->bytes_per_sector != 512) {
-    return false;
-  }
-
-  /*
-    Per https://www.pjrc.com/tech/8051/ide/fat32.html
-  */
-  fs.fat_begin_lba = fs.partition_lba + vbr->num_reserved_sectors;
-  fs.cluster_begin_lba =
-      fs.fat_begin_lba + (vbr->num_fats * vbr->sectors_per_fat);
-  fs.sectors_per_cluster = vbr->sectors_per_cluster;
-  fs.root_dir_first_cluster = vbr->root_dir_first_cluster;
-
-  uint32_t root_lba = get_cluster_lba(fs.root_dir_first_cluster);
-  (void)root_lba;
-  return true;
-}
-
-// static void parse_root_dir(void) { sd_card_read_sector() }
-
-const storage_info_t *storage_get_info(void) { return &state.info; };
