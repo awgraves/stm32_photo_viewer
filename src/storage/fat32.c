@@ -38,7 +38,7 @@ fat32_result_t fat32_mount(void) {
   return FAT32_OK;
 }
 
-const dir_entries_list_t *get_dir_entries_list(void) {
+const dir_entries_list_t *fat32_get_dir_entries_list(void) {
   return &dir_entries_list;
 }
 

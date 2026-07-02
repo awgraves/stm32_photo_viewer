@@ -11,4 +11,4 @@ typedef enum {
 
 fat32_result_t fat32_mount(void);
 
-const dir_entries_list_t *get_dir_entries_list(void);
+const dir_entries_list_t *fat32_get_dir_entries_list(void);

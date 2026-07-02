@@ -3,7 +3,6 @@
 #include "common_colors.h"
 #include "graphics/renderer.h"
 #include "screens.h"
-#include "storage/fat32.h"
 #include "storage/storage.h"
 #include <stdbool.h>
 
@@ -50,16 +49,19 @@ static void menu_move_down(void);
 */
 
 void menu_enter(void) {
-  menu_state.selected_idx = 0;
-  // temporary code! should not access fat32 directly
-  menu_state.list = get_dir_entries_list();
+  const storage_info_t *info = storage_get_info();
+  menu_state.list = info->dir_entries;
 
   menu_draw();
 }
 
 static bool storage_ok(void) {
   const storage_info_t *info = storage_get_info();
-  return (info->status == STORAGE_READY);
+  if (info->status == STORAGE_READY) {
+    menu_state.selected_idx = 0;
+    menu_state.list = info->dir_entries;
+  }
+  return false;
 }
 
 screen_t *menu_handle_event(event_t event) {

@@ -49,6 +49,7 @@ static void check_card_insertion(void) {
 static void attempt_initialization(void) {
   if (sd_card_initialize() == CARD_OK) {
     if (fat32_mount() == FAT32_OK) {
+      state.info.dir_entries = fat32_get_dir_entries_list();
       status_change(STORAGE_READY);
     } else {
       status_change(STORAGE_ERR_FS_MOUNT_FAILURE);

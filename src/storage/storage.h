@@ -1,4 +1,5 @@
 #pragma once
+#include "dir_entries.h"
 #include "drivers/sd_card.h"
 #include <stdbool.h>
 
@@ -13,6 +14,7 @@ typedef enum {
 typedef struct {
   storage_status_t status;
   const sd_card_info_t *card;
+  const dir_entries_list_t *dir_entries;
 } storage_info_t;
 
 void storage_poll(void);
