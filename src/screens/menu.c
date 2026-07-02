@@ -3,6 +3,8 @@
 #include "common_colors.h"
 #include "graphics/renderer.h"
 #include "screens.h"
+#include "storage/fat32.h"
+#include "storage/storage.h"
 #include <stdbool.h>
 
 #define WINDOW_OUTER_X_START 19
@@ -26,17 +28,13 @@
 
 typedef struct {
   uint16_t selected_idx;
-  uint16_t file_count;
-  const char *filenames[];
+  const dir_entries_list_t *list;
 } menu_state_t;
 
 static menu_state_t menu_state = {
     .selected_idx = 0,
-    .file_count = 8,
-    .filenames = {"something.bmp", "something_else.bmp", "a_3rd_thing.bmp",
-                  "how_about_another?.bmp", "more.bmp", "and_more.bmp",
-                  "more_again.bmp", "eight_is_great.bmp",
-                  "number_nine_number_nine.bmp", "wow_so_many_files.bmp"}};
+    .list = 0,
+};
 
 void menu_enter(void);
 screen_t *menu_handle_event(event_t event);
@@ -53,7 +51,15 @@ static void menu_move_down(void);
 
 void menu_enter(void) {
   menu_state.selected_idx = 0;
+  // temporary code! should not access fat32 directly
+  menu_state.list = get_dir_entries_list();
+
   menu_draw();
+}
+
+static bool storage_ok(void) {
+  const storage_info_t *info = storage_get_info();
+  return (info->status == STORAGE_READY);
 }
 
 screen_t *menu_handle_event(event_t event) {
@@ -66,6 +72,11 @@ screen_t *menu_handle_event(event_t event) {
     break;
   case EVENT_ENCODER_PRESSED:
     return &card_status;
+  case EVENT_STORAGE_STATE_CHANGE:
+    if (!storage_ok()) {
+      return &card_status;
+    }
+    break;
   default:
     break;
   }
@@ -104,12 +115,13 @@ static inline void menu_draw_row(uint8_t idx) {
   renderer_draw_rect(ROW_X_START, row_y_start, ROW_WIDTH, ROW_HEIGHT, bg);
 
   renderer_draw_text(ROW_TEXT_X_START, ROW_TEXT_Y_START(row_y_start),
-                     menu_state.filenames[idx], &terminus_bold_16, fg, bg);
+                     menu_state.list->buffered_entries[idx].short_name,
+                     &terminus_bold_16, fg, bg);
 }
 
 static void menu_draw(void) {
   menu_draw_window();
-  for (int i = 0; i < menu_state.file_count; i++)
+  for (int i = 0; i < menu_state.list->buffered_count; i++)
     menu_draw_row(i);
 }
 
@@ -123,7 +135,7 @@ static void menu_move_up(void) {
 }
 
 static void menu_move_down(void) {
-  if (menu_state.selected_idx < menu_state.file_count - 1) {
+  if (menu_state.selected_idx < menu_state.list->buffered_count - 1) {
     uint16_t old = menu_state.selected_idx;
     menu_state.selected_idx++;
     menu_draw_row(old);
