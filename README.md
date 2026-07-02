@@ -1,18 +1,24 @@
 # STM32 Photo Viewer
 A picture-frame-like embedded display that renders photos from a micro SD card.
 
-Powered by an STM32F446RE (32-bit Arm Cortex M4 processor).
+Firmware written 100% by hand from scratch. ✍️
+- ❌ no generated code
+- ❌ no 3rd party frameworks or libraries
+- ❌ no vendor hardware abstraction layer (HAL), not even CMSIS headers
+- ✅ Linker script, vector table, reset handler, clock trees, all manual
+- ✅ GPIO, SPI, SDIO, TIMER, DMA drivers from the ground up
+- ✅ Custom lightweight graphics rendering for the GUI
+- ✅ Hand-rolled SD card driver with a minimal FAT32 implementation
 
-Built 100% by hand from scratch.
+And for the physical device:
+- ✅ Custom PCB design (with EasyEDA + JLCPCB as manufacturer)
+- ✅ Homemade, 3D printed case (on a Bambu Labs A1 mini)
 
-- Register-level bare metal C programming with no OS or framework.
-- NO 3rd party code of any kind, not even CMSIS header files.
-  - Linker script, vector table, reset handler, MMIO, all by hand.
-  - GPIO, SPI, SDIO, DMA drivers from the ground up.
-  - Custom lightweight graphics library for the UI.
-  - Hand-rolled SD card driver with FAT32 filesystem implementation.
-- Custom PCB design.
-- Homemade, 3D printed case.
+## Hardware
+- STM32F446RE (32-bit Arm Cortex M4 processor) MCU
+- 3.5" TFT LCD display w/ ST7796 controller
+- EC11 rotary encoder
+- SD card slot
 
 ## Schematics
 ![EasyEDA Board Schematics](./docs/schematics/stm32_photo_viewer_schematics.png)
