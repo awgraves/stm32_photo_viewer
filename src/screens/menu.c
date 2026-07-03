@@ -73,7 +73,8 @@ screen_t *menu_handle_event(event_t event) {
     menu_move_up();
     break;
   case EVENT_ENCODER_PRESSED:
-    return &card_status;
+    storage_open_file(&menu_state.list->entries[menu_state.selected_idx]);
+    return &viewer;
   case EVENT_STORAGE_STATE_CHANGE:
     if (!storage_ok()) {
       return &card_status;
@@ -117,13 +118,13 @@ static inline void menu_draw_row(uint8_t idx) {
   renderer_draw_rect(ROW_X_START, row_y_start, ROW_WIDTH, ROW_HEIGHT, bg);
 
   renderer_draw_text(ROW_TEXT_X_START, ROW_TEXT_Y_START(row_y_start),
-                     menu_state.list->buffered_entries[idx].short_name,
+                     menu_state.list->entries[idx].short_name,
                      &terminus_bold_16, fg, bg);
 }
 
 static void menu_draw(void) {
   menu_draw_window();
-  for (int i = 0; i < menu_state.list->buffered_count; i++)
+  for (int i = 0; i < menu_state.list->count; i++)
     menu_draw_row(i);
 }
 
@@ -137,7 +138,7 @@ static void menu_move_up(void) {
 }
 
 static void menu_move_down(void) {
-  if (menu_state.selected_idx < menu_state.list->buffered_count - 1) {
+  if (menu_state.selected_idx < menu_state.list->count - 1) {
     uint16_t old = menu_state.selected_idx;
     menu_state.selected_idx++;
     menu_draw_row(old);

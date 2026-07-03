@@ -19,3 +19,13 @@ typedef struct {
 
 void storage_poll(void);
 const storage_info_t *storage_get_info(void);
+
+void storage_open_file(const dir_entry_t *entry);
+
+typedef enum {
+  STORAGE_READ_OK,
+  STORAGE_READ_EOF,
+  STORAGE_READ_IO_ERR
+} storage_read_result_t;
+storage_read_result_t storage_read_opened_file(uint8_t *buff, uint32_t len,
+                                               uint32_t *bytes_read);

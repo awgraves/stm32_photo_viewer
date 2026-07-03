@@ -3,7 +3,7 @@
 
 #define DISPLAY_PIXELS_TOTAL (DISPLAY_HEIGHT_PIXELS * DISPLAY_WIDTH_PIXELS)
 
-#define BUFF_SIZE (10 * 1024 / 2) // 10kb out of 128kb total RAM
+#define BUFF_SIZE (10 * 1024) // 20kb out of 128kb total RAM
 static uint16_t buff[BUFF_SIZE];
 static uint32_t buff_idx = 0;
 
@@ -99,7 +99,7 @@ void renderer_draw_text(uint16_t x, uint16_t y, const char *text,
     renderer_draw_char(runningX, runningY, c, font, fg, bg);
 
     runningX += font->width_px;
-    if (runningX >= DISPLAY_WIDTH_PIXELS) {
+    if (runningX >= DISPLAY_WIDTH_PIXELS - 16) {
       runningX = x;
       runningY += font->height_px;
     }

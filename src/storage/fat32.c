@@ -42,6 +42,10 @@ const dir_entries_list_t *fat32_get_dir_entries_list(void) {
   return &dir_entries_list;
 }
 
+void fat32_set_open_file(uint32_t first_cluster_num) {
+  return; // TODO: implement
+}
+
 // mbr == "Master Boot Record", is first sector of disk
 static bool parse_mbr(void) {
   card_result_t res = sd_card_read_sector(0, sector_buff);
@@ -123,60 +127,128 @@ static bool parse_vbr(void) {
   return true;
 }
 
-// skip long file names
-#define LONG_FILE_ATTRIB 0x0F
+// Per https://www.pjrc.com/tech/8051/ide/fat32.html
+#define LONG_FILE_ATTRIB_MASK 0x0F
+#define HIDDEN_FILE_ATTRIB_BIT (0x1 << 1)
+#define DIR_ATTRIB_BIT (0x1 << 4)
 
 typedef struct __attribute__((packed)) {
-  char short_name[11];
+  uint8_t short_name[11];
   uint8_t attrib_byte;
   uint8_t __unused_1[8];
   uint16_t first_cluster_high; // offset 0x14
   uint8_t __unused_2[4];
   uint16_t first_cluster_low; // offset 0x1A
-  uint32_t file_size;
+  uint32_t size_in_bytes;
 } dir_entry_raw_t;
 _Static_assert(sizeof(dir_entry_raw_t) == 32,
-               "dir_entry_t must be exactly 32 bytes");
+               "dir_entry_raw_t must be exactly 32 bytes");
 
-static inline void copy_entry_to_buffered_list(dir_entry_raw_t *raw);
-static bool parse_root_dir(void) {
-  uint32_t root_lba = get_cluster_lba(fs.root_dir_first_cluster);
-  card_result_t res = sd_card_read_sector(root_lba, sector_buff);
-  if (res != CARD_OK) {
-    return false;
+static inline void copy_entry_to_list(dir_entry_raw_t *raw);
+
+typedef struct {
+  uint8_t buff[512];
+  uint32_t cached_sector_lba; // which FAT sector is currently loaded
+} fat_cache_t;
+
+static fat_cache_t fat_cache = {
+    0}; // safe to init to zero - clusters 0 and 1 are never used
+
+static uint32_t get_next_cluster(uint32_t cluster_num) {
+  uint32_t entry_offset_bytes =
+      cluster_num * 4; // each entry is 32 bits, 4 bytes
+  uint32_t req_sector_lba = fs.fat_begin_lba + (entry_offset_bytes / 512);
+  uint32_t entry_offset_within_sector = entry_offset_bytes % 512;
+
+  if (!(req_sector_lba == fat_cache.cached_sector_lba)) {
+    card_result_t res = sd_card_read_sector(req_sector_lba, fat_cache.buff);
+    if (res != CARD_OK) {
+      // TODO: better error handling
+    }
+    fat_cache.cached_sector_lba = req_sector_lba;
   }
 
-  dir_entries_list.buffered_count = 0;
-  dir_entries_list.total_entries = 0;
+  uint32_t raw = *(uint32_t *)&fat_cache.buff[entry_offset_within_sector];
 
-  uint32_t offset = 0;
-  dir_entry_raw_t *temp;
-  for (; offset < (512 - 32); offset += 32) {
-    temp = (dir_entry_raw_t *)&sector_buff[offset];
+  if (raw >= 0xFFFFFFF8) {
+    return 0; // signal end of cluster chain to calling code
+  }
 
-    if (temp->attrib_byte & LONG_FILE_ATTRIB) {
+  return raw & 0x0FFFFFFF; // mask off top 4 bits, per
+                           // https://www.pjrc.com/tech/8051/ide/fat32.html
+}
+
+typedef enum { DIR_SCAN_CONTINUE, DIR_SCAN_DONE } dir_scan_result_t;
+
+static dir_scan_result_t process_dir_sector(void) {
+  dir_entry_raw_t *entry;
+  // each dir entry is 32 bytes
+  for (uint32_t offset = 0; offset <= (512 - 32); offset += 32) {
+    entry = (dir_entry_raw_t *)&sector_buff[offset];
+
+    if (entry->short_name[0] == 0x00) {
+      return DIR_SCAN_DONE; // marks end of dir
+    } else if (entry->short_name[0] == 0xE5) {
+      continue; // deleted file
+    }
+
+    if ((entry->attrib_byte & LONG_FILE_ATTRIB_MASK) == LONG_FILE_ATTRIB_MASK) {
       continue;
     }
 
-    if (temp->file_size == 0) {
+    if (entry->attrib_byte & HIDDEN_FILE_ATTRIB_BIT) {
       continue;
     }
 
-    // TODO, filter to only proper file extensions
-
-    dir_entries_list.total_entries++;
-
-    if (dir_entries_list.buffered_count < BUFF_ENTRIES_CAP) {
-      copy_entry_to_buffered_list(temp);
+    if (entry->attrib_byte & DIR_ATTRIB_BIT) {
+      continue; // keep things simple, all files should be placed in root
+                // dir
     }
+
+    if (entry->size_in_bytes == 0) {
+      continue;
+    }
+
+    // TODO: filter to only proper file extensions
+
+    if (dir_entries_list.count >= ENTRIES_CAP) {
+      return DIR_SCAN_DONE;
+    } else {
+      copy_entry_to_list(entry);
+    }
+  }
+
+  return DIR_SCAN_CONTINUE;
+}
+
+static bool parse_root_dir(void) {
+
+  dir_entries_list.count = 0;
+
+  uint32_t cluster_num = fs.root_dir_first_cluster;
+  while (cluster_num != 0) {
+    uint32_t cluster_lba = get_cluster_lba(cluster_num);
+    for (uint32_t s = 0; s < fs.sectors_per_cluster; s++) {
+      card_result_t res = sd_card_read_sector(cluster_lba + s, sector_buff);
+      if (res != CARD_OK) {
+        return false;
+      }
+
+      if (process_dir_sector() == DIR_SCAN_DONE) {
+        return true;
+      }
+    }
+    cluster_num = get_next_cluster(cluster_num);
   }
 
   return true;
 }
 
-static inline void copy_entry_to_buffered_list(dir_entry_raw_t *raw) {
-  dir_entry_t *p =
-      &dir_entries_list.buffered_entries[dir_entries_list.buffered_count++];
+static inline void copy_entry_to_list(dir_entry_raw_t *raw) {
+  if (dir_entries_list.count >= ENTRIES_CAP)
+    return;
+
+  dir_entry_t *p = &dir_entries_list.entries[dir_entries_list.count++];
 
   for (int i = 0; i < 11; i++) {
     p->short_name[i] = raw->short_name[i];
@@ -185,4 +257,6 @@ static inline void copy_entry_to_buffered_list(dir_entry_raw_t *raw) {
 
   p->first_cluster =
       ((raw->first_cluster_high << 8) | (raw->first_cluster_low));
+
+  p->size_in_bytes = raw->size_in_bytes;
 }

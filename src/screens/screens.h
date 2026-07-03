@@ -9,3 +9,4 @@ struct screen {
 
 extern screen_t menu;
 extern screen_t card_status;
+extern screen_t viewer;

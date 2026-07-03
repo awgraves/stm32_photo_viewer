@@ -35,6 +35,17 @@ void storage_poll(void) {
 
 const storage_info_t *storage_get_info(void) { return &state.info; };
 
+void storage_open_file(const dir_entry_t *entry) {
+  fat32_set_open_file(entry->first_cluster);
+}
+
+// TODO: implement
+storage_read_result_t storage_read_opened_file(uint8_t *buff, uint32_t len,
+                                               uint32_t *bytes_read) {
+  // other stuff in here
+  return STORAGE_READ_OK;
+}
+
 static void check_card_insertion(void) {
   bool inserted = sd_card_inserted();
   if (inserted && !state.card_inserted) {
