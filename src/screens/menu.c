@@ -49,6 +49,7 @@ static void menu_move_down(void);
 */
 
 void menu_enter(void) {
+  storage_close_file();
   const storage_info_t *info = storage_get_info();
   menu_state.list = info->files_list;
 

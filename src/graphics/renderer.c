@@ -94,6 +94,12 @@ void renderer_draw_text(uint16_t x, uint16_t y, const char *text,
 
   char c;
   while ((c = *text++)) {
+    if (c == '\n') {
+      runningX = x;
+      runningY += font->height_px;
+      continue;
+    }
+
     if (runningY >= DISPLAY_HEIGHT_PIXELS)
       return; // prevent screen overflow
     renderer_draw_char(runningX, runningY, c, font, fg, bg);

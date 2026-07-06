@@ -17,15 +17,32 @@ typedef struct {
   uint32_t fat_begin_lba;
   uint32_t cluster_begin_lba;
   uint32_t sectors_per_cluster;
+  uint32_t bytes_per_cluster;
   uint32_t root_dir_first_cluster;
 } fs_t;
 
 static fs_t fs;
 static uint8_t sector_buff[512];
 
+typedef struct {
+  uint32_t curr_cluster_num;
+  uint32_t size_in_bytes;
+  uint32_t pos;
+  bool is_initialized;
+} open_file_t;
+
+static open_file_t open_file = {0};
+
 static bool parse_mbr(void);
 static bool parse_vbr(void);
 static bool parse_root_dir(void);
+
+static uint32_t get_cluster_lba(uint32_t cluster_num);
+static uint32_t get_next_cluster(uint32_t cluster_num);
+
+/*
+  Public API
+*/
 
 fat32_result_t fat32_mount(void) {
   if (!parse_mbr())
@@ -41,8 +58,61 @@ fat32_result_t fat32_mount(void) {
 const files_list_t *fat32_get_files_list(void) { return &files_list; }
 
 void fat32_open_file(const file_t *file) {
-  return; // TODO: implement
+  open_file.curr_cluster_num = file->first_cluster;
+  open_file.size_in_bytes = file->size_in_bytes;
+  open_file.pos = 0;
+  open_file.is_initialized = true;
 }
+
+void fat32_close_file(void) { open_file.is_initialized = false; }
+
+file_result_t fat32_read_file(uint8_t *buff, uint32_t buff_len,
+                              uint32_t *bytes_read) {
+  *bytes_read = 0;
+  if (!open_file.is_initialized) {
+    return FILE_READ_ERR_NO_FILE;
+  }
+
+  file_result_t res = FILE_READ_OK;
+  uint32_t remaining_in_file = open_file.size_in_bytes - open_file.pos;
+
+  uint32_t to_read =
+      (buff_len < remaining_in_file) ? buff_len : remaining_in_file;
+
+  while (*bytes_read < to_read) {
+    uint32_t cluster_lba = get_cluster_lba(open_file.curr_cluster_num);
+    uint32_t pos_in_cluster = open_file.pos % fs.bytes_per_cluster;
+    uint32_t curr_sector_num = pos_in_cluster / 512;
+    uint32_t offset_within_sector = pos_in_cluster % 512;
+
+    if (sd_card_read_sector(cluster_lba + curr_sector_num, sector_buff) !=
+        CARD_OK) {
+      res = FILE_READ_IO_ERR;
+      break;
+    }
+
+    uint32_t sector_bytes_to_copy = 512 - offset_within_sector;
+    if (to_read - *bytes_read < sector_bytes_to_copy) {
+      sector_bytes_to_copy = to_read - *bytes_read;
+    }
+    uint32_t idx = offset_within_sector;
+    for (uint32_t remaining = sector_bytes_to_copy; remaining > 0;
+         remaining--) {
+      buff[(*bytes_read)++] = sector_buff[idx++];
+    }
+    open_file.pos += sector_bytes_to_copy;
+
+    if (open_file.pos % fs.bytes_per_cluster == 0) {
+      open_file.curr_cluster_num = get_next_cluster(open_file.curr_cluster_num);
+    }
+  }
+
+  return res;
+}
+
+/*
+  Helpers
+*/
 
 // mbr == "Master Boot Record", is first sector of disk
 static bool parse_mbr(void) {
@@ -120,6 +190,7 @@ static bool parse_vbr(void) {
   fs.cluster_begin_lba =
       fs.fat_begin_lba + (vbr->num_fats * vbr->sectors_per_fat);
   fs.sectors_per_cluster = vbr->sectors_per_cluster;
+  fs.bytes_per_cluster = fs.sectors_per_cluster * 512;
   fs.root_dir_first_cluster = vbr->root_dir_first_cluster;
 
   return true;

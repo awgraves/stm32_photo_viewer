@@ -23,6 +23,10 @@ static void status_change(storage_status_t next);
 static void check_card_insertion(void);
 static void attempt_initialization(void);
 
+/*
+  Public API
+*/
+
 void storage_poll(void) {
   check_card_insertion();
 
@@ -37,12 +41,16 @@ const storage_info_t *storage_get_info(void) { return &state.info; };
 
 void storage_open_file(const file_t *file) { fat32_open_file(file); }
 
-// TODO: implement
 file_result_t storage_read_file(uint8_t *buff, uint32_t buff_len,
                                 uint32_t *bytes_read) {
-  // other stuff in here
-  return FILE_READ_OK;
+  return fat32_read_file(buff, buff_len, bytes_read);
 }
+
+void storage_close_file(void) { fat32_close_file(); }
+
+/*
+  Helpers
+*/
 
 static void check_card_insertion(void) {
   bool inserted = sd_card_inserted();
