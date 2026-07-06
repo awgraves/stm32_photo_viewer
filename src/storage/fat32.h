@@ -1,5 +1,5 @@
 #pragma once
-#include "dir_entries.h"
+#include "files.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -11,6 +11,9 @@ typedef enum {
 
 fat32_result_t fat32_mount(void);
 
-const dir_entries_list_t *fat32_get_dir_entries_list(void);
+const files_list_t *fat32_get_files_list(void);
 
-void fat32_set_open_file(uint32_t first_cluster_num);
+void fat32_open_file(const file_t *file);
+file_result_t fat32_read_file(uint8_t *buff, uint32_t buff_len,
+                              uint32_t *bytes_read);
+void fat32_close_file(void);

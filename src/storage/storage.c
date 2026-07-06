@@ -35,15 +35,13 @@ void storage_poll(void) {
 
 const storage_info_t *storage_get_info(void) { return &state.info; };
 
-void storage_open_file(const dir_entry_t *entry) {
-  fat32_set_open_file(entry->first_cluster);
-}
+void storage_open_file(const file_t *file) { fat32_open_file(file); }
 
 // TODO: implement
-storage_read_result_t storage_read_opened_file(uint8_t *buff, uint32_t len,
-                                               uint32_t *bytes_read) {
+file_result_t storage_read_file(uint8_t *buff, uint32_t buff_len,
+                                uint32_t *bytes_read) {
   // other stuff in here
-  return STORAGE_READ_OK;
+  return FILE_READ_OK;
 }
 
 static void check_card_insertion(void) {
@@ -60,7 +58,7 @@ static void check_card_insertion(void) {
 static void attempt_initialization(void) {
   if (sd_card_initialize() == CARD_OK) {
     if (fat32_mount() == FAT32_OK) {
-      state.info.dir_entries = fat32_get_dir_entries_list();
+      state.info.files_list = fat32_get_files_list();
       status_change(STORAGE_READY);
     } else {
       status_change(STORAGE_ERR_FS_MOUNT_FAILURE);

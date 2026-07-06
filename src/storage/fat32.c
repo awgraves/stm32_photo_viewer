@@ -10,7 +10,7 @@
   as guides to come up with this implementation
 */
 
-static dir_entries_list_t dir_entries_list = {0};
+static files_list_t files_list = {0};
 
 typedef struct {
   uint32_t partition_lba;
@@ -38,11 +38,9 @@ fat32_result_t fat32_mount(void) {
   return FAT32_OK;
 }
 
-const dir_entries_list_t *fat32_get_dir_entries_list(void) {
-  return &dir_entries_list;
-}
+const files_list_t *fat32_get_files_list(void) { return &files_list; }
 
-void fat32_set_open_file(uint32_t first_cluster_num) {
+void fat32_open_file(const file_t *file) {
   return; // TODO: implement
 }
 
@@ -211,7 +209,7 @@ static dir_scan_result_t process_dir_sector(void) {
 
     // TODO: filter to only proper file extensions
 
-    if (dir_entries_list.count >= ENTRIES_CAP) {
+    if (files_list.count >= ENTRIES_CAP) {
       return DIR_SCAN_DONE;
     } else {
       copy_entry_to_list(entry);
@@ -223,7 +221,7 @@ static dir_scan_result_t process_dir_sector(void) {
 
 static bool parse_root_dir(void) {
 
-  dir_entries_list.count = 0;
+  files_list.count = 0;
 
   uint32_t cluster_num = fs.root_dir_first_cluster;
   while (cluster_num != 0) {
@@ -245,10 +243,10 @@ static bool parse_root_dir(void) {
 }
 
 static inline void copy_entry_to_list(dir_entry_raw_t *raw) {
-  if (dir_entries_list.count >= ENTRIES_CAP)
+  if (files_list.count >= ENTRIES_CAP)
     return;
 
-  dir_entry_t *p = &dir_entries_list.entries[dir_entries_list.count++];
+  file_t *p = &files_list.files[files_list.count++];
 
   for (int i = 0; i < 11; i++) {
     p->short_name[i] = raw->short_name[i];

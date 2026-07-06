@@ -27,7 +27,7 @@
 
 typedef struct {
   uint16_t selected_idx;
-  const dir_entries_list_t *list;
+  const files_list_t *list;
 } menu_state_t;
 
 static menu_state_t menu_state = {
@@ -50,7 +50,7 @@ static void menu_move_down(void);
 
 void menu_enter(void) {
   const storage_info_t *info = storage_get_info();
-  menu_state.list = info->dir_entries;
+  menu_state.list = info->files_list;
 
   menu_draw();
 }
@@ -59,7 +59,7 @@ static bool storage_ok(void) {
   const storage_info_t *info = storage_get_info();
   if (info->status == STORAGE_READY) {
     menu_state.selected_idx = 0;
-    menu_state.list = info->dir_entries;
+    menu_state.list = info->files_list;
   }
   return false;
 }
@@ -73,7 +73,7 @@ screen_t *menu_handle_event(event_t event) {
     menu_move_up();
     break;
   case EVENT_ENCODER_PRESSED:
-    storage_open_file(&menu_state.list->entries[menu_state.selected_idx]);
+    storage_open_file(&menu_state.list->files[menu_state.selected_idx]);
     return &viewer;
   case EVENT_STORAGE_STATE_CHANGE:
     if (!storage_ok()) {
@@ -118,8 +118,8 @@ static inline void menu_draw_row(uint8_t idx) {
   renderer_draw_rect(ROW_X_START, row_y_start, ROW_WIDTH, ROW_HEIGHT, bg);
 
   renderer_draw_text(ROW_TEXT_X_START, ROW_TEXT_Y_START(row_y_start),
-                     menu_state.list->entries[idx].short_name,
-                     &terminus_bold_16, fg, bg);
+                     menu_state.list->files[idx].short_name, &terminus_bold_16,
+                     fg, bg);
 }
 
 static void menu_draw(void) {
