@@ -21,12 +21,15 @@ void card_status_enter(void) {
 }
 
 screen_t *card_status_handle_event(event_t event) {
+  const storage_info_t *info = storage_get_info();
   switch (event) {
   case EVENT_STORAGE_STATE_CHANGE:
     card_status_draw();
     break;
   case EVENT_ENCODER_PRESSED:
-    return &menu;
+    if (info->status == STORAGE_READY) {
+      return &menu;
+    }
   default:
     // do nothing
     break;
