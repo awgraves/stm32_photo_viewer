@@ -2,9 +2,11 @@
 # requires-python = ">=3.14"
 # dependencies = [
 #     "numpy>=2.5.1",
+#     "pathlib>=1.0.1",
 #     "pillow>=12.3.0",
 # ]
 # ///
+import os
 import numpy as np
 from PIL import Image, ImageOps
 
@@ -13,14 +15,15 @@ INPUT_DIR = "./tools/originals"
 OUTPUT_DIR = "./tools/outputs"
 
 OUTPUT_SIZE = (320, 480)  # width, height
-PADDING_COLOR = "#FFF"
+PADDING_COLOR = "#000"
 
 
-def test():
+def convert(input_path):
     try:
-        with Image.open(f"{INPUT_DIR}/may_and_olivia.jpg").convert("RGB") as im:
+        with Image.open(input_path).convert("RGB") as im:
+            rotated = ImageOps.exif_transpose(im)
             processed = ImageOps.pad(
-                im.transpose(Image.Transpose.ROTATE_270),
+                rotated,
                 size=OUTPUT_SIZE,
                 color=PADDING_COLOR,
                 centering=(0.5, 0.5),
@@ -43,10 +46,16 @@ def test():
 
             # Convert to big-endian 16-bit before writing raw bytes
             rgb565_be = rgb565_array.astype(">u2")
-            rgb565_be.tofile(f"{OUTPUT_DIR}/may_and_olivia.pic")
+            filename = input_path.split("/")[-1].split(".")[0]
+            rgb565_be.tofile(f"{OUTPUT_DIR}/{filename}.pic")
     except OSError:
-        print("Could not read file")
+        print(f"Could not read file: {input_path}")
+
+
+def process_inputs():
+    for entry in os.scandir(INPUT_DIR):
+        convert(entry.path)
 
 
 if __name__ == "__main__":
-    test()
+    process_inputs()
