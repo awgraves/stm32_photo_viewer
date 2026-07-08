@@ -139,15 +139,16 @@ card_result_t sd_card_initialize(void) {
     Set bus width to 4
 
     note: seeing signal integrity issues when prototyping with long jumper
-    wires. will keep bus width to 1 until working with PCB, then can try again.
+    wires.
+
+    4 bit bus width does work on the PCB though where traces are shorter.
   */
-  // sdio_bus_width_set(SDIO_BUS_WIDTH_4);
-  // status =
-  //     sdio_send_cmd(CMD55, card.rca << 16, SDIO_RESP_TYPE_SHORT,
-  //     &short_resp);
-  // if (status != SDIO_OK) {
-  //   return CARD_ERR_FAILED_BUS_WIDTH_CHANGE;
-  // }
+  sdio_bus_width_set(SDIO_BUS_WIDTH_4);
+  status =
+      sdio_send_cmd(CMD55, card.rca << 16, SDIO_RESP_TYPE_SHORT, &short_resp);
+  if (status != SDIO_OK) {
+    return CARD_ERR_FAILED_BUS_WIDTH_CHANGE;
+  }
 
   status =
       sdio_send_cmd(ACMD6, ACMD6_ARG_4_BITS, SDIO_RESP_TYPE_SHORT, &short_resp);

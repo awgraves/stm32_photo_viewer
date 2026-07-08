@@ -34,7 +34,7 @@ also note nucleo board manual pg. 36 for board pin layout
 */
 
 void board_init(void) {
-  sysclock_init(CPU_FREQ_56_MHZ);
+  sysclock_init(CPU_FREQ_60_MHZ);
   time_init();
 
   /* Peripherals */
