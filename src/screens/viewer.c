@@ -14,15 +14,23 @@ screen_t viewer = {
 
 static inline void draw_view(void);
 
-#define BUFF_SIZE 512
+#define BUFF_SIZE (20 * 1024) // 20kb out of 128kb total RAM
 static uint8_t buff[BUFF_SIZE];
 
 void viewer_enter(void) {
   uint32_t bytes_read;
-  for (int i = 0; i < BUFF_SIZE; i++)
-    buff[i] = 0;
-  storage_read_file(buff, BUFF_SIZE, &bytes_read);
-  draw_view();
+  file_result_t res;
+  renderer_begin_stream();
+  while (1) {
+    res = storage_read_file(buff, BUFF_SIZE, &bytes_read);
+    if (res != FILE_READ_OK || bytes_read == 0)
+      break;
+    renderer_write_to_stream((uint16_t *)buff, bytes_read / 2);
+  }
+  renderer_end_stream();
+
+  if (res != FILE_READ_OK)
+    draw_view();
 }
 
 screen_t *viewer_handle_event(event_t event) {

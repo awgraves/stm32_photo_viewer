@@ -22,3 +22,7 @@ void renderer_draw_char(uint16_t x, uint16_t y, const char c,
 
 void renderer_draw_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                         color_t color);
+
+void renderer_begin_stream(void);
+void renderer_write_to_stream(uint16_t *pixels, uint32_t count);
+void renderer_end_stream(void);

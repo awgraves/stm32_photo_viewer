@@ -3,7 +3,7 @@
 
 #define DISPLAY_PIXELS_TOTAL (DISPLAY_HEIGHT_PIXELS * DISPLAY_WIDTH_PIXELS)
 
-#define BUFF_SIZE (10 * 1024) // 20kb out of 128kb total RAM
+#define BUFF_SIZE (5 * 1024) // 10kb out of 128kb total RAM
 static uint16_t buff[BUFF_SIZE];
 static uint32_t buff_idx = 0;
 
@@ -124,6 +124,18 @@ void renderer_draw_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
   }
   stream_end();
 }
+
+void renderer_begin_stream(void) {
+  display_set_window(0, 0, DISPLAY_WIDTH_PIXELS - 1, DISPLAY_HEIGHT_PIXELS - 1);
+
+  display_pixel_stream_begin();
+}
+
+void renderer_write_to_stream(uint16_t *pixels, uint32_t count) {
+  display_pixel_stream_write(pixels, count);
+}
+
+void renderer_end_stream(void) { display_pixel_stream_end(); }
 
 /*
 Helpers

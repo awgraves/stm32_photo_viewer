@@ -89,3 +89,6 @@ debug_server:
 
 debug:
 	$(GDB) $(BUILD_DIR)/code.elf -ex "target remote :3333" -ex "monitor reset halt"
+
+@phony convert:
+	uv run ./tools/convert.py
