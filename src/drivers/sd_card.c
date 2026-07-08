@@ -12,7 +12,7 @@ void sd_card_gpio_init(sd_card_gpio_config_t *config) {
   sdio_init(&conf.sdio);
 }
 
-bool sd_card_inserted(void) { return gpio_digital_read(conf.det); }
+bool sd_card_inserted(void) { return !gpio_digital_read(conf.det); }
 
 // sd spec pg. 224 outlines CID register
 #define CID_PNM_MSB 103

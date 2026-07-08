@@ -14,7 +14,7 @@ screen_t *curr_screen;
 int main() {
   board_init();
 
-  // splash_show();
+  splash_show();
 
   curr_screen = &card_status;
   curr_screen->enter();

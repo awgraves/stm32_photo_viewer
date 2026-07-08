@@ -10,9 +10,9 @@ static poll_state_t state = {.button_pressed = false};
 
 void inputs_poll(void) {
   rotary_state_t curr = rotary_encoder_get_state();
-  if (curr.delta > 0) {
+  if (curr.delta < 0) {
     event_queue_push(EVENT_ENCODER_CW);
-  } else if (curr.delta < 0) {
+  } else if (curr.delta > 0) {
     event_queue_push(EVENT_ENCODER_CCW);
   }
 
