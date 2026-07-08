@@ -325,7 +325,7 @@ static inline void copy_entry_to_list(dir_entry_raw_t *raw) {
   p->short_name[11] = '\0';
 
   p->first_cluster =
-      ((raw->first_cluster_high << 8) | (raw->first_cluster_low));
+      ((raw->first_cluster_high << 16) | (raw->first_cluster_low));
 
   p->size_in_bytes = raw->size_in_bytes;
 }
