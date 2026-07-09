@@ -5,6 +5,7 @@ CC=arm-none-eabi-gcc
 GDB=arm-none-eabi-gdb
 OBJ_SIZE=arm-none-eabi-size
 DISPLAY_DRIVER ?= ST7796
+SPEED_PROFILE ?= FAST
 
 LS_PATH=./src/mcu/link.ld
 BUILD_DIR=./build
@@ -55,6 +56,14 @@ else ifeq ($(DISPLAY_DRIVER), ST7796)
 	SOURCES += assets/logos/splash_logo_large.c
 else
 	$(error Unknown DISPLAY_DRIVER: $(DISPLAY_DRIVER))
+endif
+
+ifeq ($(SPEED_PROFILE), FAST)
+	CFLAGS += -DSPEED_PROFILE_FAST
+else ifeq ($(SPEED_PROFILE), SLOW)
+	CFLAGS += -DSPEED_PROFILE_SLOW
+else
+	$(error Please specify a SPEED_PROFILE)
 endif
 
 OBJ_NAMES = $(SOURCES:.c=.o)

@@ -33,13 +33,30 @@ and SWDCLK is on PA14
 also note nucleo board manual pg. 36 for board pin layout
 */
 
+/*
+  See the SPEED_PROFILE var in the makefile.
+  Slower speed useful for bring up on a dev board with long wires,
+  Fast speed works great on a PCB with short traces.
+*/
+#if defined(SPEED_PROFILE_FAST)
+#define CPU_FREQ CPU_FREQ_168_MHZ
+#define SPI_BAUD_DIV SPI_BAUD_DIV_4
+#define SPI_GPIO_SPEED GPIO_SPEED_FAST
+#elif defined(SPEED_PROFILE_SLOW)
+#define CPU_FREQ CPU_FREQ_32_MHZ
+#define SPI_BAUD_DIV SPI_BAUD_DIV_2
+#define SPI_GPIO_SPEED GPIO_SPEED_SLOW
+#endif
+
 void board_init(void) {
-  sysclock_init(CPU_FREQ_60_MHZ);
+  sysclock_init(CPU_FREQ);
   time_init();
 
   /* Peripherals */
-  spi_config_t spi1_conf = {
-      .mosi = LCD_SPI_MOSI, .sck = LCD_SPI_SCK, .baud = SPI_BAUD_DIV_2};
+  spi_config_t spi1_conf = {.mosi = LCD_SPI_MOSI,
+                            .sck = LCD_SPI_SCK,
+                            .baud = SPI_BAUD_DIV,
+                            .gpio_speed = SPI_GPIO_SPEED};
   spi_init(&spi1, &spi1_conf);
 
   /* Drivers */

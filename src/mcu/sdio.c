@@ -184,6 +184,7 @@ void sdio_ck_freq_set(sdio_ck_freq_t freq) {
     break;
   case SDIO_CK_FREQ_24MHZ:
     // default CLKDIV is 0, so PLL48mhz / (0 + 2)
+    SDIO->CLKCR &= ~(0xFF);
     delay_ms(1);
     break;
   case SDIO_CK_FREQ_48MHZ:

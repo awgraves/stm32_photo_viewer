@@ -52,10 +52,9 @@ void spi_init(spi_t *spi, spi_config_t *c) {
   gpio_set_AF(c->mosi, spi->af);
   gpio_set_AF(c->sck, spi->af);
 
-  // these appear fine at low speed (which are defaults anyways)
-  // leaving these here explicitly in case need to debug in future
-  gpio_set_ospeed(c->mosi, GPIO_SPEED_SLOW);
-  gpio_set_ospeed(c->sck, GPIO_SPEED_SLOW);
+  // the GPIO speed vals DO matter depending on the configured spi bus speed.
+  gpio_set_ospeed(c->mosi, c->gpio_speed);
+  gpio_set_ospeed(c->sck, c->gpio_speed);
 
   spi_clock_enable(spi);
 

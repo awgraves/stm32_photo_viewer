@@ -11,6 +11,14 @@ typedef struct {
   uint16_t flash_acr_latency;
 } config_t;
 
+const config_t mhz16 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_0,
+    .plln = RCC_PLLCFGR_PLLN(128),            // VCO becomes 128Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_8), // 128 / 8 = 16mhz
+    .pllq =
+        RCC_PLLCFGR_PLLQ(4) // 128 / 4 = 32mhz (less than 48mhz, but acceptable)
+};
+
 const config_t mhz32 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
     .plln = RCC_PLLCFGR_PLLN(192),            // VCO becomes 192Mhz
@@ -60,6 +68,13 @@ const config_t mhz96 = {
     .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
 };
 
+const config_t mhz168 = {
+    .flash_acr_latency = FLASH_ACR_LATENCY_5,
+    .plln = RCC_PLLCFGR_PLLN(336),            // VCO becomes 336Mhz
+    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_2), // 336 / 2 = 168mhz
+    .pllq = RCC_PLLCFGR_PLLQ(7)               // 336 / 7 = 48mhz
+};
+
 /*
 See RM0390 pg 118 clock diagram
 */
@@ -69,8 +84,8 @@ void sysclock_init(cpu_freq_t freq) {
   config_t const *config;
   switch (freq) {
   case CPU_FREQ_16_MHZ:
-    // hw defaults to this on board reset
-    return;
+    config = &mhz16;
+    break;
   case CPU_FREQ_32_MHZ:
     config = &mhz32;
     break;
@@ -91,6 +106,9 @@ void sysclock_init(cpu_freq_t freq) {
     break;
   case CPU_FREQ_96_MHZ:
     config = &mhz96;
+    break;
+  case CPU_FREQ_168_MHZ:
+    config = &mhz168;
     break;
   }
 
@@ -113,9 +131,12 @@ void sysclock_init(cpu_freq_t freq) {
    pg. 69 instruction cache memory enabled with ICEN in FLASH_ACR
   */
 
-  FLASH->ACR = (config->flash_acr_latency | FLASH_ACR_PRFTEN | FLASH_ACR_ICEN);
-  while (!(FLASH->ACR & FLASH_ACR_LATENCY_1))
-    ;
+  if (config->flash_acr_latency > 0) {
+    FLASH->ACR =
+        (config->flash_acr_latency | FLASH_ACR_PRFTEN | FLASH_ACR_ICEN);
+    while (!(FLASH->ACR & FLASH_ACR_LATENCY_1))
+      ;
+  }
 
   RCC->CR |= RCC_CR_HSION;
   while (!(RCC->CR & RCC_CR_HSIRDY))

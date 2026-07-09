@@ -10,6 +10,8 @@ typedef enum {
   CPU_FREQ_60_MHZ = 60000000UL,
   CPU_FREQ_84_MHZ = 84000000UL,
   CPU_FREQ_96_MHZ = 96000000UL,
+  CPU_FREQ_168_MHZ =
+      168000000UL // highest speed w/o overdrive config. RM0390 pg 66
 } cpu_freq_t;
 
 void sysclock_init(cpu_freq_t freq);
