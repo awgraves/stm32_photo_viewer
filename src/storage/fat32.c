@@ -85,22 +85,36 @@ file_result_t fat32_read_file(uint8_t *buff, uint32_t buff_len,
     uint32_t curr_sector_num = pos_in_cluster / 512;
     uint32_t offset_within_sector = pos_in_cluster % 512;
 
-    if (sd_card_read_sector(cluster_lba + curr_sector_num, sector_buff) !=
+    // when possible, stream the sector bytes directly to final buffer
+    // otherwise will need to use the 512b sector_buff and copy partial data
+    uint32_t space_left_in_buffer = buff_len - *bytes_read;
+    uint8_t *_buffer =
+        (space_left_in_buffer >= 512 && offset_within_sector == 0)
+            ? &buff[*bytes_read]
+            : sector_buff;
+
+    if (sd_card_read_sector(cluster_lba + curr_sector_num, _buffer) !=
         CARD_OK) {
       res = FILE_READ_IO_ERR;
       break;
     }
 
-    uint32_t sector_bytes_to_copy = 512 - offset_within_sector;
-    if (to_read - *bytes_read < sector_bytes_to_copy) {
-      sector_bytes_to_copy = to_read - *bytes_read;
+    if (_buffer == sector_buff) {
+      // copy partial sector data to final buffer
+      uint32_t sector_bytes_to_copy = 512 - offset_within_sector;
+      if (to_read - *bytes_read < sector_bytes_to_copy) {
+        sector_bytes_to_copy = to_read - *bytes_read;
+      }
+      uint32_t idx = offset_within_sector;
+      for (uint32_t remaining = sector_bytes_to_copy; remaining > 0;
+           remaining--) {
+        buff[(*bytes_read)++] = sector_buff[idx++];
+      }
+      open_file.pos += sector_bytes_to_copy;
+    } else {
+      open_file.pos += 512;
+      *bytes_read += 512;
     }
-    uint32_t idx = offset_within_sector;
-    for (uint32_t remaining = sector_bytes_to_copy; remaining > 0;
-         remaining--) {
-      buff[(*bytes_read)++] = sector_buff[idx++];
-    }
-    open_file.pos += sector_bytes_to_copy;
 
     if (open_file.pos % fs.bytes_per_cluster == 0) {
       open_file.curr_cluster_num = get_next_cluster(open_file.curr_cluster_num);
