@@ -3,7 +3,8 @@
 #include "gpio.h"
 #include "registers.h"
 
-#define DMA_THRESHOLD 2 // keep polling for small tx, ie commands
+#define DMA_THRESHOLD 2       // keep polling for small tx, ie commands
+#define SPI_DMA_MAX_LEN 65535 // per RM0390 pg. 228
 
 typedef struct {
   DMA_t *regs;
@@ -102,9 +103,9 @@ void spi_dma_init(spi_t *spi) {
 */
 
 static void spi_tx_polling(spi_t *spi, const uint8_t data[], uint16_t len);
-static void spi_tx_dma(spi_t *spi, const uint8_t data[], uint16_t len);
+static void spi_tx_dma(spi_t *spi, const uint8_t data[], uint32_t len);
 
-void spi_tx(spi_t *spi, const uint8_t data[], uint16_t len) {
+void spi_tx(spi_t *spi, const uint8_t data[], uint32_t len) {
   // polling is faster with small data
   // otherwise DMA is faster
   len > DMA_THRESHOLD ? spi_tx_dma(spi, data, len)
@@ -150,7 +151,7 @@ static inline void spi_tx_dma_disable(spi_t *spi) {
   spi->regs->CR2 &= ~(SPI_CR2_TXDMAEN);
 }
 
-static void spi_tx_dma(spi_t *spi, const uint8_t data[], uint16_t len) {
+static void spi_tx_dma_chunk(spi_t *spi, const uint8_t data[], uint16_t len) {
   while (spi->regs->SR & (SPI_SR_BSY))
     ;
 
@@ -164,7 +165,7 @@ static void spi_tx_dma(spi_t *spi, const uint8_t data[], uint16_t len) {
 
   // set mem source to data
   stream->M0AR = (uint32_t)data;
-  // set num data items to xfer
+  // set num data items to xfer, limited to uint16 size
   stream->NDTR = len;
 
   spi_tx_dma_enable(spi);
@@ -179,4 +180,14 @@ static void spi_tx_dma(spi_t *spi, const uint8_t data[], uint16_t len) {
 
   dma_stream_disable(stream);
   spi_tx_dma_disable(spi);
+}
+
+static void spi_tx_dma(spi_t *spi, const uint8_t data[], uint32_t len) {
+  uint32_t sent = 0;
+  while (sent < len) {
+    uint32_t remaining = len - sent;
+    uint16_t chunk = remaining < SPI_DMA_MAX_LEN ? remaining : SPI_DMA_MAX_LEN;
+    spi_tx_dma_chunk(spi, &data[sent], chunk);
+    sent += chunk;
+  }
 }

@@ -17,4 +17,4 @@ typedef struct spi_config {
 } spi_config_t;
 
 void spi_init(spi_t *spi, spi_config_t *c);
-void spi_tx(spi_t *spi, const uint8_t data[], uint16_t len);
+void spi_tx(spi_t *spi, const uint8_t data[], uint32_t len);
