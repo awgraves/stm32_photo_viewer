@@ -2,8 +2,8 @@
 #include "assets/fonts/terminus_bold_16.h"
 #include "common_colors.h"
 #include "graphics/renderer.h"
+#include "photo_album/photo_album.h"
 #include "screens.h"
-#include "storage/storage.h"
 #include <stdbool.h>
 
 #define WINDOW_OUTER_X_START 19
@@ -26,13 +26,12 @@
 #define ROW_TEXT_Y_START(base) (base + ROW_TEXT_Y_PADDING)
 
 typedef struct {
-  uint16_t selected_idx;
+  uint16_t highlighted_idx;
   const files_list_t *files_list;
 } menu_state_t;
 
 static menu_state_t menu_state = {
-    .selected_idx = 0,
-    .files_list = 0,
+    .highlighted_idx = 0,
 };
 
 void menu_enter(void);
@@ -49,23 +48,11 @@ static void menu_move_down(void);
 */
 
 void menu_enter(void) {
-  storage_close_file();
-  const storage_info_t *info = storage_get_info();
-  menu_state.files_list = info->files_list;
-  if (menu_state.selected_idx > menu_state.files_list->count) {
-    menu_state.selected_idx = 0;
-  }
+  photo_album_refresh();
+
+  menu_state.files_list = photo_album_get_photo_list();
 
   menu_draw();
-}
-
-static bool storage_ok(void) {
-  const storage_info_t *info = storage_get_info();
-  if (info->status == STORAGE_READY) {
-    menu_state.selected_idx = 0;
-    menu_state.files_list = info->files_list;
-  }
-  return false;
 }
 
 screen_t *menu_handle_event(event_t event) {
@@ -77,12 +64,10 @@ screen_t *menu_handle_event(event_t event) {
     menu_move_up();
     break;
   case EVENT_ENCODER_PRESSED:
-    storage_open_file(&menu_state.files_list->files[menu_state.selected_idx]);
+    photo_album_open_by_idx(menu_state.highlighted_idx);
     return &viewer;
   case EVENT_STORAGE_STATE_CHANGE:
-    if (!storage_ok()) {
-      return &card_status;
-    }
+    return &card_status;
     break;
   default:
     break;
@@ -113,7 +98,7 @@ static inline void menu_draw_row(uint8_t idx) {
   color_t fg = TEXT_COLOR;
   color_t bg = BG_COLOR;
 
-  if (idx == menu_state.selected_idx) {
+  if (idx == menu_state.highlighted_idx) {
     fg = BG_COLOR;
     bg = TEXT_COLOR;
   }
@@ -133,19 +118,19 @@ static void menu_draw(void) {
 }
 
 static void menu_move_up(void) {
-  if (menu_state.selected_idx > 0) {
-    uint16_t old = menu_state.selected_idx;
-    menu_state.selected_idx--;
+  if (menu_state.highlighted_idx > 0) {
+    uint16_t old = menu_state.highlighted_idx;
+    menu_state.highlighted_idx--;
     menu_draw_row(old);
-    menu_draw_row(menu_state.selected_idx);
+    menu_draw_row(menu_state.highlighted_idx);
   }
 }
 
 static void menu_move_down(void) {
-  if (menu_state.selected_idx < menu_state.files_list->count - 1) {
-    uint16_t old = menu_state.selected_idx;
-    menu_state.selected_idx++;
+  if (menu_state.highlighted_idx < menu_state.files_list->count - 1) {
+    uint16_t old = menu_state.highlighted_idx;
+    menu_state.highlighted_idx++;
     menu_draw_row(old);
-    menu_draw_row(menu_state.selected_idx);
+    menu_draw_row(menu_state.highlighted_idx);
   }
 }

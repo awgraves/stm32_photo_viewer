@@ -43,6 +43,7 @@ SOURCES = mcu/startup.c \
 					screens/menu.c \
 					screens/card_status.c \
 					screens/viewer.c \
+					photo_album/photo_album.c \
 					main.c
 
 ifeq ($(DISPLAY_DRIVER), ILI9341)

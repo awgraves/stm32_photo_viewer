@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#define ENTRIES_CAP 10
+#define ENTRIES_CAP 20
 
 typedef struct {
   char short_name[12]; // include string null terminator
