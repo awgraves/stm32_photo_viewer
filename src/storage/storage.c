@@ -60,7 +60,7 @@ static void check_card_insertion(void) {
     status_change(STORAGE_NO_MEDIA);
   }
 
-  state.card_inserted = sd_card_inserted();
+  state.card_inserted = inserted;
 }
 
 static void attempt_initialization(void) {

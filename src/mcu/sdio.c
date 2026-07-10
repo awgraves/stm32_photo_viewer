@@ -3,6 +3,8 @@
 #include "registers.h"
 #include "time.h"
 
+#define READ_TIMEOUT_MS 1000
+
 static inline void sdio_dma_init(void);
 
 void sdio_init(sdio_config_t *conf) {
@@ -131,9 +133,11 @@ sdio_status_t sdio_read_block(uint32_t sector_num, uint8_t buff[512]) {
 
   volatile uint32_t sta;
   volatile uint32_t dma2_hisr;
+  uint32_t start = millis();
   while (1) {
     sta = SDIO->STA;
     dma2_hisr = DMA2->HISR;
+    uint32_t now = millis();
 
     // SDIO errors
     if (sta & SDIO_STA_DCRCFAIL) {
@@ -143,6 +147,9 @@ sdio_status_t sdio_read_block(uint32_t sector_num, uint8_t buff[512]) {
       status = SDIO_ERR_FIFO_OVERRUN;
       break;
     } else if (sta & SDIO_STA_DTIMEOUT) {
+      status = SDIO_ERR_TIMEOUT;
+      break;
+    } else if (now - start > READ_TIMEOUT_MS) {
       status = SDIO_ERR_TIMEOUT;
       break;
     }
