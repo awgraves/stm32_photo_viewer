@@ -7,6 +7,6 @@ struct screen {
   screen_t *(*handle_event)(event_t event);
 };
 
+extern screen_t init;
 extern screen_t menu;
-extern screen_t card_status;
 extern screen_t viewer;

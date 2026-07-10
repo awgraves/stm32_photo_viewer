@@ -21,11 +21,7 @@
 #define MADCTL_MV (1U << 5)
 #define MADCTL_BGR (1U << 3)
 
-#ifdef DISPLAY_DRIVER_ILI9341
-#define PARAMS_MADCTL ((MADCTL_BGR | MADCTL_MV) & 0xFF)
-#elif defined(DISPLAY_DRIVER_ST7796)
 #define PARAMS_MADCTL ((MADCTL_BGR | MADCTL_MY))
-#endif
 
 #define CMD_MEM_WRITE 0x2C
 

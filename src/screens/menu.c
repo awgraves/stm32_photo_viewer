@@ -67,7 +67,7 @@ screen_t *menu_handle_event(event_t event) {
     photo_album_open_by_idx(menu_state.highlighted_idx);
     return &viewer;
   case EVENT_STORAGE_STATE_CHANGE:
-    return &card_status;
+    return &init;
     break;
   default:
     break;

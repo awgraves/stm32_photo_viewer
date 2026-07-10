@@ -67,7 +67,9 @@ static void attempt_initialization(void) {
   if (sd_card_initialize() == CARD_OK) {
     if (fat32_mount() == FAT32_OK) {
       state.info.files_list = fat32_get_files_list();
-      status_change(STORAGE_READY);
+      return state.info.files_list->count > 0
+                 ? status_change(STORAGE_READY)
+                 : status_change(STORAGE_ERR_NO_PHOTOS);
     } else {
       status_change(STORAGE_ERR_FS_MOUNT_FAILURE);
     }

@@ -41,7 +41,7 @@ screen_t *viewer_handle_event(event_t event) {
   case EVENT_ENCODER_PRESSED:
     return &menu;
   case EVENT_STORAGE_STATE_CHANGE:
-    return &card_status;
+    return &init;
   case EVENT_ENCODER_CW:
     if (photo_album_open_next()) {
       render_curr_photo();
