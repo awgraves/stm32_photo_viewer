@@ -6,6 +6,7 @@
 
 uint16_t renderer_get_centered_x(uint16_t width);
 uint16_t renderer_get_centered_y(uint16_t height);
+uint16_t renderer_get_text_width(const char *text, const font_t *font);
 
 void renderer_fill_screen(color_t color);
 
@@ -22,6 +23,17 @@ void renderer_draw_char(uint16_t x, uint16_t y, const char c,
 
 void renderer_draw_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
                         color_t color);
+
+typedef struct {
+  uint16_t x;
+  uint16_t y;
+  uint16_t width;
+  uint16_t height;
+  color_t line_color;
+  color_t fill_color;
+  uint8_t line_thickness;
+} box_params_t;
+void renderer_draw_box(box_params_t *p);
 
 void renderer_begin_stream(void);
 void renderer_write_to_stream(uint16_t *pixels, uint32_t count);

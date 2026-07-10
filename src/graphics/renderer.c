@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "drivers/display.h"
+#include "utils/string.h"
 
 #define DISPLAY_PIXELS_TOTAL (DISPLAY_HEIGHT_PIXELS * DISPLAY_WIDTH_PIXELS)
 
@@ -25,6 +26,11 @@ uint16_t renderer_get_centered_x(uint16_t width) {
 }
 uint16_t renderer_get_centered_y(uint16_t height) {
   return (DISPLAY_HEIGHT_PIXELS / 2) - (height / 2) - 1;
+}
+
+uint16_t renderer_get_text_width(const char *text, const font_t *font) {
+  uint16_t len = string_len(text);
+  return len * font->width_px;
 }
 
 void renderer_fill_screen(color_t color) {
@@ -123,6 +129,13 @@ void renderer_draw_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
     stream_pixel(color);
   }
   stream_end();
+}
+
+void renderer_draw_box(box_params_t *p) {
+  renderer_draw_rect(p->x, p->y, p->width, p->height, p->line_color);
+  renderer_draw_rect(p->x + p->line_thickness, p->y + p->line_thickness,
+                     p->width - (2 * p->line_thickness),
+                     p->height - (2 * p->line_thickness), p->fill_color);
 }
 
 void renderer_begin_stream(void) {
