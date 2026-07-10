@@ -47,6 +47,8 @@ SOURCES = mcu/startup.c \
 					screens/viewer.c \
 					photo_album/photo_album.c \
 					utils/string.c \
+					ui/window.c \
+					ui/button.c \
 					main.c
 
 ifeq ($(SPEED_PROFILE), FAST)
