@@ -3,9 +3,11 @@
 #include "assets/fonts/terminus_bold_16.h"
 #include "common_colors.h"
 #include "graphics/renderer.h"
+#include "photo_album/photo_album.h"
 #include "screens.h"
 #include "ui/option_row.h"
 #include "ui/window.h"
+#include "utils/string.h"
 
 void menu_enter(void);
 screen_t *menu_handle_event(event_t event);
@@ -59,6 +61,19 @@ static const char *ops[NUM_TIMING_OPTS] = {"Manual (using knob)", "2 seconds",
                                            "5 seconds", "10 seconds",
                                            "30 seconds"};
 
+static void load_photo_count_text(char s[]) {
+  uint32_t photo_count = photo_album_get_photo_count();
+
+  uint8_t char_count = itoa(photo_count, s);
+  char_count++; // account for \0
+  char *label = " Photos";
+  char c;
+  while ((c = *label++)) {
+    s[char_count++] = c;
+  }
+  s[char_count] = '\0';
+}
+
 static void menu_draw(void) {
   bg_draw();
 
@@ -81,7 +96,9 @@ static void menu_draw(void) {
 
   // PHOTO COUNT
   running_y += PHOTO_COUNT_TOP_MARGIN;
-  const char *photo_count_text = "53 Photos"; // 9
+  char photo_count_text[32];
+  load_photo_count_text(photo_count_text);
+
   uint16_t photo_count_text_width =
       renderer_get_text_width(photo_count_text, &ibm_bios_16);
   uint16_t photo_count_x = renderer_get_centered_x(photo_count_text_width);

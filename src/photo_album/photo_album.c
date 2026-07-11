@@ -17,6 +17,8 @@ void photo_album_refresh(void) {
   current_photo_idx = 0;
 }
 
+uint32_t photo_album_get_photo_count(void) { return files_list->count; }
+
 void photo_album_open_curr(void) { open_photo(current_photo_idx); }
 
 void photo_album_open_next(void) {
