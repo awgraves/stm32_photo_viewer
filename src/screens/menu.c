@@ -1,136 +1,141 @@
+#include "assets/bitmaps/title_text.h"
 #include "assets/fonts/ibm_bios_16.h"
 #include "assets/fonts/terminus_bold_16.h"
 #include "common_colors.h"
 #include "graphics/renderer.h"
-#include "photo_album/photo_album.h"
 #include "screens.h"
-#include <stdbool.h>
-
-#define WINDOW_OUTER_X_START 19
-#define WINDOW_OUTER_Y_START 19
-#define WINDOW_OUTER_WIDTH DISPLAY_WIDTH_PIXELS - 40 // 280
-#define WINDOW_OUTER_HEIGHT (DISPLAY_HEIGHT_PIXELS - (WINDOW_OUTER_Y_START * 2))
-#define WINDOW_PADDING 2
-#define WINDOW_INNER_X_START (WINDOW_OUTER_X_START + WINDOW_PADDING)
-#define WINDOW_INNER_Y_START (WINDOW_OUTER_Y_START + WINDOW_PADDING)
-#define WINDOW_INNER_WIDTH (WINDOW_OUTER_WIDTH - (WINDOW_PADDING * 2))
-#define WINDOW_INNER_HEIGHT (WINDOW_OUTER_HEIGHT - (WINDOW_PADDING * 2))
-
-#define ROW_WIDTH WINDOW_INNER_WIDTH
-#define ROW_HEIGHT 22
-#define ROW_X_START WINDOW_INNER_X_START
-#define ROW_Y_BASE (WINDOW_INNER_Y_START + WINDOW_OUTER_Y_START - 4)
-#define ROW_TEXT_X_PADDING 8
-#define ROW_TEXT_Y_PADDING 3
-#define ROW_TEXT_X_START (ROW_X_START + ROW_TEXT_X_PADDING)
-#define ROW_TEXT_Y_START(base) (base + ROW_TEXT_Y_PADDING)
-
-typedef struct {
-  uint16_t highlighted_idx;
-  const files_list_t *files_list;
-} menu_state_t;
-
-static menu_state_t menu_state = {
-    .highlighted_idx = 0,
-};
+#include "ui/option_row.h"
+#include "ui/window.h"
 
 void menu_enter(void);
 screen_t *menu_handle_event(event_t event);
 
-screen_t menu = {.enter = menu_enter, .handle_event = menu_handle_event};
+screen_t menu = {
+    .enter = menu_enter,
+    .handle_event = menu_handle_event,
+};
 
+static void bg_draw(void);
 static void menu_draw(void);
-static void menu_move_up(void);
-static void menu_move_down(void);
-
-/*
- Public API
-*/
 
 void menu_enter(void) {
-  photo_album_refresh();
-
-  menu_state.files_list = photo_album_get_photo_list();
-
+  bg_draw();
   menu_draw();
 }
 
 screen_t *menu_handle_event(event_t event) {
   switch (event) {
-  case EVENT_ENCODER_CW:
-    menu_move_down();
-    break;
-  case EVENT_ENCODER_CCW:
-    menu_move_up();
-    break;
-  case EVENT_ENCODER_PRESSED:
-    photo_album_open_by_idx(menu_state.highlighted_idx);
-    return &viewer;
   case EVENT_STORAGE_STATE_CHANGE:
     return &init;
-    break;
+  case EVENT_ENCODER_PRESSED:
   default:
+    // do nothing
     break;
   }
 
   return &menu;
 }
 
-/*
-  Helpers
-*/
+static void bg_draw(void) { renderer_fill_screen(BG_COLOR); }
 
-static inline void menu_draw_window(void) {
-  renderer_fill_screen(BG_COLOR);
+#define PHOTO_COUNT_TOP_MARGIN 16
+#define PHOTO_COUNT_HEIGHT (terminus_bold_16.height_px)
 
-  renderer_draw_rect(WINDOW_OUTER_X_START, WINDOW_OUTER_Y_START,
-                     WINDOW_OUTER_WIDTH, WINDOW_OUTER_HEIGHT, COLOR_WHITE);
-  renderer_draw_rect(WINDOW_INNER_X_START, WINDOW_INNER_Y_START,
-                     WINDOW_INNER_WIDTH, WINDOW_INNER_HEIGHT, COLOR_BLUE_ALT);
+#define WINDOW_TOP_MARGIN 50
+#define WINDOW_OUTER_X_START 19
+#define WINDOW_OUTER_Y_START 19
+#define WINDOW_OUTER_WIDTH DISPLAY_WIDTH_PIXELS - 40 // 280
+#define WINDOW_LINE_THICKNESS 2
+#define WINDOW_FIRST_ROW_TOP_MARGIN 16
+#define WINDOW_ROW_HEIGHT (terminus_bold_16.height_px + 8)
+#define WINDOW_LAST_ROW_BOTTOM_MARGIN 10
+#define WINDOW_HEIGHT                                                          \
+  (WINDOW_FIRST_ROW_TOP_MARGIN + (WINDOW_ROW_HEIGHT * NUM_TIMING_OPTS) +       \
+   WINDOW_LAST_ROW_BOTTOM_MARGIN + (WINDOW_LINE_THICKNESS << 1))
 
-  uint16_t title_x =
-      renderer_get_centered_x(ibm_bios_16.width_px * 14); // 14 chars
-  renderer_draw_text(title_x, (WINDOW_OUTER_Y_START - 8), " Photo Viewer ",
-                     &ibm_bios_16, TEXT_COLOR, BG_COLOR);
-}
-
-static inline void menu_draw_row(uint8_t idx) {
-  color_t fg = TEXT_COLOR;
-  color_t bg = BG_COLOR;
-
-  if (idx == menu_state.highlighted_idx) {
-    fg = BG_COLOR;
-    bg = TEXT_COLOR;
-  }
-
-  uint16_t row_y_start = ROW_Y_BASE + (ROW_HEIGHT * idx);
-  renderer_draw_rect(ROW_X_START, row_y_start, ROW_WIDTH, ROW_HEIGHT, bg);
-
-  renderer_draw_text(ROW_TEXT_X_START, ROW_TEXT_Y_START(row_y_start),
-                     menu_state.files_list->files[idx].short_name,
-                     &terminus_bold_16, fg, bg);
-}
+#define NUM_TIMING_OPTS 5
+static const char *ops[NUM_TIMING_OPTS] = {"Manual (using knob)", "2 seconds",
+                                           "5 seconds", "10 seconds",
+                                           "30 seconds"};
 
 static void menu_draw(void) {
-  menu_draw_window();
-  for (int i = 0; i < menu_state.files_list->count; i++)
-    menu_draw_row(i);
-}
+  bg_draw();
 
-static void menu_move_up(void) {
-  if (menu_state.highlighted_idx > 0) {
-    uint16_t old = menu_state.highlighted_idx;
-    menu_state.highlighted_idx--;
-    menu_draw_row(old);
-    menu_draw_row(menu_state.highlighted_idx);
-  }
-}
+  uint16_t total_height = title_text.height_px + PHOTO_COUNT_TOP_MARGIN +
+                          PHOTO_COUNT_HEIGHT + WINDOW_TOP_MARGIN +
+                          WINDOW_HEIGHT;
 
-static void menu_move_down(void) {
-  if (menu_state.highlighted_idx < menu_state.files_list->count - 1) {
-    uint16_t old = menu_state.highlighted_idx;
-    menu_state.highlighted_idx++;
-    menu_draw_row(old);
-    menu_draw_row(menu_state.highlighted_idx);
+  uint16_t running_y = renderer_get_centered_y(total_height);
+
+  // BITMAP title
+  uint16_t title_x = renderer_get_centered_x(title_text.width_px);
+  uint16_t title_y = running_y;
+  color_palette_t p = {
+      COLOR_BLUE_ALT,
+      COLOR_WHITE,
+  };
+
+  renderer_draw_indexed_bitmap(title_x, title_y, &title_text, p);
+  running_y += title_text.height_px;
+
+  // PHOTO COUNT
+  running_y += PHOTO_COUNT_TOP_MARGIN;
+  const char *photo_count_text = "53 Photos"; // 9
+  uint16_t photo_count_text_width =
+      renderer_get_text_width(photo_count_text, &ibm_bios_16);
+  uint16_t photo_count_x = renderer_get_centered_x(photo_count_text_width);
+  renderer_draw_text(photo_count_x, running_y, photo_count_text, &ibm_bios_16,
+                     TEXT_COLOR, BG_COLOR);
+  running_y += PHOTO_COUNT_HEIGHT;
+
+  // TIMING WINDOW
+  running_y += WINDOW_TOP_MARGIN;
+
+  window_params_t wp = {
+      .x = WINDOW_OUTER_X_START,
+      .y = running_y,
+      .height = WINDOW_HEIGHT,
+      .width = WINDOW_OUTER_WIDTH,
+      .title_text = " Timing ",
+      .title_font = &ibm_bios_16,
+      .line_color = TEXT_COLOR,
+      .fill_color = BG_COLOR,
+      .line_thickness = WINDOW_LINE_THICKNESS,
+  };
+  window_draw(&wp);
+
+  running_y += WINDOW_LINE_THICKNESS + WINDOW_FIRST_ROW_TOP_MARGIN;
+
+  // TIMING OPTIONS
+  for (int i = 0; i < NUM_TIMING_OPTS; i++) {
+    option_row_params_t op = {
+        .x = wp.x + wp.line_thickness,
+        .y = running_y,
+        .height = WINDOW_ROW_HEIGHT,
+        .width = wp.width - wp.line_thickness * 2,
+        .text = ops[i],
+        .font = &terminus_bold_16,
+        .text_color = TEXT_COLOR,
+        .bg_color = BG_COLOR,
+        .focused = i == 4, // temp
+    };
+    option_row_draw(&op);
+    running_y += op.height;
   }
+
+  running_y += WINDOW_LAST_ROW_BOTTOM_MARGIN + WINDOW_LINE_THICKNESS;
+
+  // ABOUT BUTTON runy + 58 + termboldheight * 2
+  // button_params_t about_btn = {
+  //    .x = DISPLAY_WIDTH_PIXELS >> 2,
+  //    .y = running_y + (ibm_bios_16.height_px * 2) + 36,
+  //    .height = ibm_bios_16.height_px << 1,
+  //    .width = DISPLAY_WIDTH_PIXELS >> 1,
+  //    .line_color = TEXT_COLOR,
+  //    .fill_color = BG_COLOR,
+  //    .highlighted = false,
+  //    .text = "About",
+  //    .font = &terminus_bold_16,
+  //};
+  // button_draw(&about_btn);
 }

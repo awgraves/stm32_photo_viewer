@@ -79,8 +79,8 @@ static void storage_status_draw(storage_status_t status) {
     text = "NO PHOTOS FOUND";
     break;
   case STORAGE_READY:
-    text = "Storage READY!";
-    break;
+    // no text update
+    return;
   }
 
   renderer_draw_rect(0, status_text_y, DISPLAY_WIDTH_PIXELS,
