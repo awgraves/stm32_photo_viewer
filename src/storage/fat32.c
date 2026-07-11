@@ -10,6 +10,8 @@
   as guides to come up with this implementation
 */
 
+#define END_OF_CLUSTER_CHAIN 0 // safe as sentinel - cluster num 0 is reserved
+
 static files_list_t files_list = {0};
 
 typedef struct {
@@ -254,7 +256,7 @@ static uint32_t get_next_cluster(uint32_t cluster_num) {
   uint32_t raw = *(uint32_t *)&fat_cache.buff[entry_offset_within_sector];
 
   if (raw >= 0xFFFFFFF8) {
-    return 0; // signal end of cluster chain to calling code
+    return END_OF_CLUSTER_CHAIN;
   }
 
   return raw & 0x0FFFFFFF; // mask off top 4 bits, per
@@ -262,6 +264,17 @@ static uint32_t get_next_cluster(uint32_t cluster_num) {
 }
 
 typedef enum { DIR_SCAN_CONTINUE, DIR_SCAN_DONE } dir_scan_result_t;
+
+static bool is_pic_file(dir_entry_raw_t *e) {
+  char *required_ext = "PIC";
+  for (int i = 8, j = 0; j < 3; i++, j++) {
+    if (e->short_name[i] != required_ext[j]) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 static dir_scan_result_t process_dir_sector(void) {
   dir_entry_raw_t *entry;
@@ -292,7 +305,9 @@ static dir_scan_result_t process_dir_sector(void) {
       continue;
     }
 
-    // TODO: filter to only proper file extensions
+    if (!is_pic_file(entry)) {
+      continue;
+    }
 
     if (files_list.count >= ENTRIES_CAP) {
       return DIR_SCAN_DONE;
@@ -309,7 +324,7 @@ static bool parse_root_dir(void) {
   files_list.count = 0;
 
   uint32_t cluster_num = fs.root_dir_first_cluster;
-  while (cluster_num != 0) {
+  while (cluster_num != END_OF_CLUSTER_CHAIN) {
     uint32_t cluster_lba = get_cluster_lba(cluster_num);
     for (uint32_t s = 0; s < fs.sectors_per_cluster; s++) {
       card_result_t res = sd_card_read_sector(cluster_lba + s, sector_buff);
@@ -332,11 +347,6 @@ static inline void copy_entry_to_list(dir_entry_raw_t *raw) {
     return;
 
   file_t *p = &files_list.files[files_list.count++];
-
-  for (int i = 0; i < 11; i++) {
-    p->short_name[i] = raw->short_name[i];
-  }
-  p->short_name[11] = '\0';
 
   p->first_cluster =
       ((raw->first_cluster_high << 16) | (raw->first_cluster_low));

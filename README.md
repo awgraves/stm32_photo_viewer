@@ -44,3 +44,13 @@ See the tool [README](tools/README.md) for more details.
 
 ## Local Dev Setup
 1. Run `make setup` to generate the clangd compile commands for your IDE.
+
+## RAM Budgeting
+Total RAM available on STM32F446RE: **128kb**
+
+### Noteworthy Buffer Allocations
+- Photo rendering: 64kb (50% of total budget)
+- File list: 16kb (12.5%), translates to max 2048 photos
+- Graphics rendering: 10kb (~8%)
+
+Leaves 38kb for stack (~29%)

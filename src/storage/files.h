@@ -1,10 +1,9 @@
 #pragma once
 #include <stdint.h>
 
-#define ENTRIES_CAP 20
+#define ENTRIES_CAP 2048 // 2048 x 8 bytes = 16kb out of 128kb RAM
 
 typedef struct {
-  char short_name[12]; // include string null terminator
   uint32_t first_cluster;
   uint32_t size_in_bytes;
 } file_t;
