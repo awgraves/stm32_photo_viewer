@@ -25,5 +25,3 @@ void storage_open_file(const file_t *file);
 
 file_result_t storage_read_file(uint8_t *buff, uint32_t buff_len,
                                 uint32_t *bytes_read);
-
-void storage_close_file(void);

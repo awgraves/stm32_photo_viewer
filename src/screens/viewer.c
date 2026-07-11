@@ -18,7 +18,7 @@ static inline void draw_error(void);
 #define BUFF_SIZE (64 * 1024) // 64kb out of 128kb total RAM, ie 50% of RAM
 static uint8_t buff[BUFF_SIZE];
 
-void render_curr_photo(void) {
+void render_opened_photo(void) {
   uint32_t bytes_read;
   file_result_t res;
   renderer_begin_stream();
@@ -34,7 +34,10 @@ void render_curr_photo(void) {
     draw_error();
 }
 
-void viewer_enter(void) { render_curr_photo(); }
+void viewer_enter(void) {
+  photo_album_open_curr();
+  render_opened_photo();
+}
 
 screen_t *viewer_handle_event(event_t event) {
   switch (event) {
@@ -43,14 +46,12 @@ screen_t *viewer_handle_event(event_t event) {
   case EVENT_STORAGE_STATE_CHANGE:
     return &init;
   case EVENT_ENCODER_CW:
-    if (photo_album_open_next()) {
-      render_curr_photo();
-    };
+    photo_album_open_next();
+    render_opened_photo();
     return &viewer;
   case EVENT_ENCODER_CCW:
-    if (photo_album_open_previous()) {
-      render_curr_photo();
-    }
+    photo_album_open_previous();
+    render_opened_photo();
     return &viewer;
   default:
     return &viewer;

@@ -2,6 +2,7 @@
 #include "assets/fonts/ibm_bios_16.h"
 #include "common_colors.h"
 #include "graphics/renderer.h"
+#include "photo_album/photo_album.h"
 #include "screens.h"
 #include "storage/storage.h"
 
@@ -41,6 +42,7 @@ screen_t *init_handle_event(event_t event) {
   case EVENT_STORAGE_STATE_CHANGE:
     storage_status_draw(info->status);
     if (info->status == STORAGE_READY) {
+      photo_album_refresh();
       return &menu;
     }
     break;

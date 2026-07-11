@@ -46,8 +46,6 @@ file_result_t storage_read_file(uint8_t *buff, uint32_t buff_len,
   return fat32_read_file(buff, buff_len, bytes_read);
 }
 
-void storage_close_file(void) { fat32_close_file(); }
-
 /*
   Helpers
 */

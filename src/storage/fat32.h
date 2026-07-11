@@ -16,4 +16,3 @@ const files_list_t *fat32_get_files_list(void);
 void fat32_open_file(const file_t *file);
 file_result_t fat32_read_file(uint8_t *buff, uint32_t buff_len,
                               uint32_t *bytes_read);
-void fat32_close_file(void);

@@ -28,6 +28,7 @@ screen_t *menu_handle_event(event_t event) {
   case EVENT_STORAGE_STATE_CHANGE:
     return &init;
   case EVENT_ENCODER_PRESSED:
+    return &viewer;
   default:
     // do nothing
     break;

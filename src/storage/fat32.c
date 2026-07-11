@@ -52,6 +52,8 @@ fat32_result_t fat32_mount(void) {
   if (!parse_root_dir())
     return FAT32_ERR_DIR_PARSE;
 
+  open_file.is_initialized = false;
+
   return FAT32_OK;
 }
 
@@ -63,8 +65,6 @@ void fat32_open_file(const file_t *file) {
   open_file.pos = 0;
   open_file.is_initialized = true;
 }
-
-void fat32_close_file(void) { open_file.is_initialized = false; }
 
 file_result_t fat32_read_file(uint8_t *buff, uint32_t buff_len,
                               uint32_t *bytes_read) {
