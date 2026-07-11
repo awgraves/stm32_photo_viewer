@@ -5,9 +5,16 @@
 #include "graphics/renderer.h"
 #include "photo_album/photo_album.h"
 #include "screens.h"
+#include "ui/focus_list.h"
 #include "ui/option_row.h"
 #include "ui/window.h"
 #include "utils/string.h"
+
+/*
+  Public API
+*/
+
+static focus_list_t focus_list;
 
 void menu_enter(void);
 screen_t *menu_handle_event(event_t event);
@@ -30,7 +37,13 @@ screen_t *menu_handle_event(event_t event) {
   case EVENT_STORAGE_STATE_CHANGE:
     return &init;
   case EVENT_ENCODER_PRESSED:
-    return &viewer;
+    return focus_list_handle_press(&focus_list);
+  case EVENT_ENCODER_CW:
+    focus_list_move_down(&focus_list);
+    break;
+  case EVENT_ENCODER_CCW:
+    focus_list_move_up(&focus_list);
+    break;
   default:
     // do nothing
     break;
@@ -39,7 +52,30 @@ screen_t *menu_handle_event(event_t event) {
   return &menu;
 }
 
-static void bg_draw(void) { renderer_fill_screen(BG_COLOR); }
+/*
+  Helpers
+*/
+
+typedef struct {
+  const char *label;
+  uint8_t seconds;
+} timing_opt_t;
+
+#define NUM_TIMING_OPTS 5
+static const timing_opt_t timing_opts[NUM_TIMING_OPTS] = {
+    {"Manual (using knob)", 0},
+    {"2 seconds", 2},
+    {"5 seconds", 5},
+    {"10 seconds", 10},
+    {"30 seconds", 30}};
+
+static focus_item_t focus_items[NUM_TIMING_OPTS];
+
+static focus_list_t focus_list = {
+    .items = focus_items,
+    .count = NUM_TIMING_OPTS,
+    .focused_idx = 0,
+};
 
 #define PHOTO_COUNT_TOP_MARGIN 16
 #define PHOTO_COUNT_HEIGHT (terminus_bold_16.height_px)
@@ -56,23 +92,29 @@ static void bg_draw(void) { renderer_fill_screen(BG_COLOR); }
   (WINDOW_FIRST_ROW_TOP_MARGIN + (WINDOW_ROW_HEIGHT * NUM_TIMING_OPTS) +       \
    WINDOW_LAST_ROW_BOTTOM_MARGIN + (WINDOW_LINE_THICKNESS << 1))
 
-#define NUM_TIMING_OPTS 5
-static const char *ops[NUM_TIMING_OPTS] = {"Manual (using knob)", "2 seconds",
-                                           "5 seconds", "10 seconds",
-                                           "30 seconds"};
-
-static void load_photo_count_text(char s[]) {
-  uint32_t photo_count = photo_album_get_photo_count();
-
-  uint8_t char_count = itoa(photo_count, s);
-  char_count++; // account for \0
-  char *label = " Photos";
-  char c;
-  while ((c = *label++)) {
-    s[char_count++] = c;
-  }
-  s[char_count] = '\0';
+static void timing_option_render(const focus_item_t *self, bool focused) {
+  option_row_params_t op = {
+      .x = self->x,
+      .y = self->y,
+      .height = self->height,
+      .width = self->width,
+      .text = self->label,
+      .font = &terminus_bold_16,
+      .text_color = TEXT_COLOR,
+      .bg_color = BG_COLOR,
+      .focused = focused,
+  };
+  option_row_draw(&op);
 }
+
+static screen_t *timing_option_handle_press(const focus_item_t *self) {
+  (void)self;
+  return &viewer; // TODO: implement timer
+}
+
+static void load_photo_count_text(char s[]);
+
+static void bg_draw(void) { renderer_fill_screen(BG_COLOR); }
 
 static void menu_draw(void) {
   bg_draw();
@@ -126,34 +168,33 @@ static void menu_draw(void) {
 
   // TIMING OPTIONS
   for (int i = 0; i < NUM_TIMING_OPTS; i++) {
-    option_row_params_t op = {
+    focus_item_t *opt = &focus_list.items[i];
+    *opt = (focus_item_t){
         .x = wp.x + wp.line_thickness,
         .y = running_y,
         .height = WINDOW_ROW_HEIGHT,
         .width = wp.width - wp.line_thickness * 2,
-        .text = ops[i],
-        .font = &terminus_bold_16,
-        .text_color = TEXT_COLOR,
-        .bg_color = BG_COLOR,
-        .focused = i == 4, // temp
+        .label = timing_opts[i].label,
+        .render = timing_option_render,
+        .on_press = timing_option_handle_press,
     };
-    option_row_draw(&op);
-    running_y += op.height;
+    running_y += opt->height;
   }
 
-  running_y += WINDOW_LAST_ROW_BOTTOM_MARGIN + WINDOW_LINE_THICKNESS;
+  focus_list_draw_all(&focus_list);
 
-  // ABOUT BUTTON runy + 58 + termboldheight * 2
-  // button_params_t about_btn = {
-  //    .x = DISPLAY_WIDTH_PIXELS >> 2,
-  //    .y = running_y + (ibm_bios_16.height_px * 2) + 36,
-  //    .height = ibm_bios_16.height_px << 1,
-  //    .width = DISPLAY_WIDTH_PIXELS >> 1,
-  //    .line_color = TEXT_COLOR,
-  //    .fill_color = BG_COLOR,
-  //    .highlighted = false,
-  //    .text = "About",
-  //    .font = &terminus_bold_16,
-  //};
-  // button_draw(&about_btn);
+  running_y += WINDOW_LAST_ROW_BOTTOM_MARGIN + WINDOW_LINE_THICKNESS;
+}
+
+static void load_photo_count_text(char s[]) {
+  uint32_t photo_count = photo_album_get_photo_count();
+
+  uint8_t char_count = itoa(photo_count, s);
+  char_count++; // account for \0
+  char *label = " Photos";
+  char c;
+  while ((c = *label++)) {
+    s[char_count++] = c;
+  }
+  s[char_count] = '\0';
 }
