@@ -13,6 +13,7 @@ struct focus_item {
   const char *label;
   focus_item_render_fn render;
   focus_item_press_fn on_press;
+  void *data;
 };
 
 typedef struct {

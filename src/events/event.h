@@ -7,4 +7,5 @@ typedef enum {
   EVENT_ENCODER_PRESSED,
   /* application events */
   EVENT_STORAGE_STATE_CHANGE,
+  EVENT_SLIDESHOW_TIMER_ELAPSED
 } event_t;

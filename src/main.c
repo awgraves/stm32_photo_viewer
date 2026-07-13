@@ -4,9 +4,10 @@
 #include "inputs/poll.h"
 #include "screens/screens.h"
 #include "screens/splash.h"
+#include "slideshow/slideshow.h"
 #include "storage/storage.h"
 
-#define POLL_MS_INTERVAL 10
+#define POLL_MS_INTERVAL 5 // fine enough that UI lag is imperceptible
 
 void process_events(void);
 screen_t *curr_screen;
@@ -25,8 +26,9 @@ int main() {
     now = millis();
     if (now - last_poll >= POLL_MS_INTERVAL) {
       last_poll = now;
-      inputs_poll();
       storage_poll();
+      inputs_poll();
+      slideshow_poll();
       process_events();
     }
   }
@@ -38,6 +40,7 @@ void process_events(void) {
   while (event_queue_pop(&event)) {
     next = curr_screen->handle_event(event);
     if (next != curr_screen) {
+      curr_screen->exit();
       curr_screen = next;
       curr_screen->enter();
     }

@@ -5,6 +5,7 @@ typedef struct screen screen_t;
 struct screen {
   void (*enter)(void);
   screen_t *(*handle_event)(event_t event);
+  void (*exit)(void);
 };
 
 extern screen_t init;

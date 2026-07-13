@@ -47,6 +47,7 @@ SOURCES = mcu/startup.c \
 					screens/init.c \
 					screens/viewer.c \
 					photo_album/photo_album.c \
+					slideshow/slideshow.c \
 					utils/string.c \
 					ui/window.c \
 					ui/button.c \

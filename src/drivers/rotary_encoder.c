@@ -2,7 +2,7 @@
 #include "mcu/timer.h"
 #include "time.h"
 
-#define SWITCH_DEBOUNCE_MS 10
+#define SWITCH_DEBOUNCE_MS 5
 #define ENCODER_PULSES_PER_DETENT 4
 
 typedef struct {

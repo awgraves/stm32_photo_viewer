@@ -10,10 +10,12 @@
 
 void init_enter(void);
 screen_t *init_handle_event(event_t event);
+void init_exit(void);
 
 screen_t init = {
     .enter = init_enter,
     .handle_event = init_handle_event,
+    .exit = init_exit,
 };
 
 static uint16_t title_text_y = 0;
@@ -53,6 +55,8 @@ screen_t *init_handle_event(event_t event) {
 
   return &init;
 }
+
+void init_exit(void) { return; }
 
 static void bg_draw(void) { renderer_fill_screen(BG_COLOR); }
 

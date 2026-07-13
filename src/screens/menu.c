@@ -5,6 +5,7 @@
 #include "graphics/renderer.h"
 #include "photo_album/photo_album.h"
 #include "screens.h"
+#include "slideshow/slideshow.h"
 #include "ui/focus_list.h"
 #include "ui/option_row.h"
 #include "ui/window.h"
@@ -18,11 +19,10 @@ static focus_list_t focus_list;
 
 void menu_enter(void);
 screen_t *menu_handle_event(event_t event);
+void menu_exit(void);
 
 screen_t menu = {
-    .enter = menu_enter,
-    .handle_event = menu_handle_event,
-};
+    .enter = menu_enter, .handle_event = menu_handle_event, .exit = menu_exit};
 
 static void bg_draw(void);
 static void menu_draw(void);
@@ -52,22 +52,24 @@ screen_t *menu_handle_event(event_t event) {
   return &menu;
 }
 
+void menu_exit(void) { return; }
+
 /*
   Helpers
 */
 
 typedef struct {
   const char *label;
-  uint8_t seconds;
+  slideshow_mode_t slideshow_mode;
 } timing_opt_t;
 
-#define NUM_TIMING_OPTS 5
+#define NUM_TIMING_OPTS 4
 static const timing_opt_t timing_opts[NUM_TIMING_OPTS] = {
-    {"Manual (using knob)", 0},
-    {"2 seconds", 2},
-    {"5 seconds", 5},
-    {"10 seconds", 10},
-    {"30 seconds", 30}};
+    {"Manual (using knob)", SLIDESHOW_MODE_OFF},
+    {"2 seconds", SLIDESHOW_MODE_2_SECONDS},
+    {"5 seconds", SLIDESHOW_MODE_5_SECONDS},
+    {"10 seconds", SLIDESHOW_MODE_10_SECONDS},
+};
 
 static focus_item_t focus_items[NUM_TIMING_OPTS];
 
@@ -108,8 +110,8 @@ static void timing_option_render(const focus_item_t *self, bool focused) {
 }
 
 static screen_t *timing_option_handle_press(const focus_item_t *self) {
-  (void)self;
-  return &viewer; // TODO: implement timer
+  slideshow_set_mode(*(slideshow_mode_t *)self->data);
+  return &viewer;
 }
 
 static void load_photo_count_text(char s[]);
@@ -177,6 +179,7 @@ static void menu_draw(void) {
         .label = timing_opts[i].label,
         .render = timing_option_render,
         .on_press = timing_option_handle_press,
+        .data = (void *)&timing_opts[i].slideshow_mode,
     };
     running_y += opt->height;
   }

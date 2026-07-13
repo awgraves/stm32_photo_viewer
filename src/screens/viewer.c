@@ -3,20 +3,25 @@
 #include "graphics/renderer.h"
 #include "photo_album/photo_album.h"
 #include "screens.h"
+#include "slideshow/slideshow.h"
 #include "storage/storage.h"
 
 void viewer_enter(void);
 screen_t *viewer_handle_event(event_t event);
+void viewer_exit(void);
 
 screen_t viewer = {
     .enter = viewer_enter,
     .handle_event = viewer_handle_event,
+    .exit = viewer_exit,
 };
 
 static inline void draw_error(void);
 
 #define BUFF_SIZE (64 * 1024) // 64kb out of 128kb total RAM, ie 50% of RAM
 static uint8_t buff[BUFF_SIZE];
+
+static bool slideshow_enabled = false;
 
 void render_opened_photo(void) {
   uint32_t bytes_read;
@@ -35,28 +40,43 @@ void render_opened_photo(void) {
 }
 
 void viewer_enter(void) {
+  slideshow_enabled = slideshow_get_mode() != SLIDESHOW_MODE_OFF;
   photo_album_open_curr();
   render_opened_photo();
 }
 
 screen_t *viewer_handle_event(event_t event) {
   switch (event) {
-  case EVENT_ENCODER_PRESSED:
-    return &menu;
   case EVENT_STORAGE_STATE_CHANGE:
     return &init;
+  case EVENT_ENCODER_PRESSED:
+    return &menu;
   case EVENT_ENCODER_CW:
+    if (slideshow_enabled) {
+      break;
+    }
     photo_album_open_next();
     render_opened_photo();
-    return &viewer;
+    break;
   case EVENT_ENCODER_CCW:
+    if (slideshow_enabled) {
+      break;
+    }
     photo_album_open_previous();
     render_opened_photo();
-    return &viewer;
+    break;
+  case EVENT_SLIDESHOW_TIMER_ELAPSED:
+    photo_album_open_next();
+    render_opened_photo();
+    break;
   default:
-    return &viewer;
+    break;
   }
+
+  return &viewer;
 }
+
+void viewer_exit(void) { slideshow_set_mode(SLIDESHOW_MODE_OFF); }
 
 static inline void draw_error(void) {
   renderer_fill_screen(BG_COLOR);
