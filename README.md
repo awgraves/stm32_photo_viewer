@@ -29,7 +29,8 @@ See the Loading Photos section below for more info.
 1. [GNU Arm Embedded Toolchain](https://developer.arm.com/downloads/-/gnu-rm)
 2. [GNU Make](https://www.gnu.org/software/make/)
 3. [Bear](https://github.com/rizsotto/Bear) (for clangd compile_commands generation)
-4. [UV Python package & project manager](https://docs.astral.sh/uv/) (used for conversion script)
+4. [OpenOCD](https://openocd.org/pages/getting-openocd.html) (for ST-link connection)
+5. [UV Python package & project manager](https://docs.astral.sh/uv/) (for photo conversion script)
 
 ## Loading Photos
 A modern, high capacity micro SD card is required for the firmware.
