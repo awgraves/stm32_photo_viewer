@@ -2,8 +2,8 @@
 #include "assets/bitmaps/splash_logo.h"
 #include "assets/fonts/ibm_bios_16.h"
 #include "assets/fonts/terminus_bold_16.h"
+#include "drivers/time.h"
 #include "graphics/renderer.h"
-#include "mcu/time.h"
 #include <stdbool.h>
 
 #define BLINK_MS 300

@@ -1,10 +1,10 @@
-#include "time.h"
+#include "systick.h"
 #include "registers.h"
 #include "sysclock.h"
 
 static volatile uint32_t systicks = 0;
 
-void time_init(void) {
+void systick_init(void) {
   uint32_t cpu_ticks_per_ms = (sysclock_get_cpu_hz() / 1000);
 
   SYSTICK->RVR = cpu_ticks_per_ms - 1; // set reload value for 1 ms
@@ -14,10 +14,10 @@ void time_init(void) {
 
 void Systick_Handler(void) { systicks++; }
 
-void delay_ms(uint32_t ms) {
+void systick_ms(uint32_t ms) {
   uint32_t now = systicks;
   while (systicks - now < ms)
     ;
 }
 
-uint32_t millis(void) { return systicks; }
+uint32_t systick_millis(void) { return systicks; }

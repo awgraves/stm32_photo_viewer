@@ -1,6 +1,6 @@
 #include "rotary_encoder.h"
-#include "mcu/time.h"
 #include "mcu/timer.h"
+#include "time.h"
 
 #define SWITCH_DEBOUNCE_MS 10
 #define ENCODER_PULSES_PER_DETENT 4

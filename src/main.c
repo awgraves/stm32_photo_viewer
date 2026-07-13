@@ -1,7 +1,7 @@
 #include "board/board.h"
+#include "drivers/time.h"
 #include "events/event_queue.h"
 #include "inputs/poll.h"
-#include "mcu/time.h"
 #include "screens/screens.h"
 #include "screens/splash.h"
 #include "storage/storage.h"

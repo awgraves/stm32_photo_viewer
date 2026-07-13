@@ -1,5 +1,5 @@
 #include "display.h"
-#include "mcu/time.h"
+#include "time.h"
 
 /* Commands begin on display datasheet pg. 83 */
 #define CMD_NOOP 0x00

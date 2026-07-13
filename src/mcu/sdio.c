@@ -1,7 +1,7 @@
 #include "sdio.h"
 #include "dma.h"
 #include "registers.h"
-#include "time.h"
+#include "systick.h"
 
 #define READ_TIMEOUT_MS 1000
 
@@ -133,11 +133,11 @@ sdio_status_t sdio_read_block(uint32_t sector_num, uint8_t buff[512]) {
 
   volatile uint32_t sta;
   volatile uint32_t dma2_hisr;
-  uint32_t start = millis();
+  uint32_t start = systick_millis();
   while (1) {
     sta = SDIO->STA;
     dma2_hisr = DMA2->HISR;
-    uint32_t now = millis();
+    uint32_t now = systick_millis();
 
     // SDIO errors
     if (sta & SDIO_STA_DCRCFAIL) {
@@ -183,32 +183,32 @@ static inline void sdio_ck_enable(void);
 void sdio_ck_freq_set(sdio_ck_freq_t freq) {
   sdio_ck_disable();
   SDIO->CLKCR &= ~(SDIO_CLKCR_CLKDIV_CLEAR | SDIO_CLKCR_BYPASS);
-  delay_ms(1);
+  systick_ms(1);
   switch (freq) {
   case SDIO_CK_FREQ_400KHZ:
     SDIO->CLKCR = (SDIO->CLKCR | STARTUP_DIVISOR);
-    delay_ms(1);
+    systick_ms(1);
     break;
   case SDIO_CK_FREQ_24MHZ:
     // default CLKDIV is 0, so PLL48mhz / (0 + 2)
     SDIO->CLKCR &= ~(0xFF);
-    delay_ms(1);
+    systick_ms(1);
     break;
   case SDIO_CK_FREQ_48MHZ:
     SDIO->CLKCR |= SDIO_CLKCR_BYPASS;
     break;
   }
   sdio_ck_enable();
-  delay_ms(1);
+  systick_ms(1);
 }
 
 void sdio_bus_width_set(sdio_bus_width_t width) {
   sdio_ck_disable();
   SDIO->CLKCR &= ~(SDIO_CLKCR_BUS_WIDTH_CLEAR_BITS);
-  delay_ms(1);
+  systick_ms(1);
   SDIO->CLKCR |= SDIO_CLKCR_BUS_WIDTH(width);
   sdio_ck_enable();
-  delay_ms(1);
+  systick_ms(1);
 }
 
 static inline void sdio_cmd_flags_clear(void) {
@@ -302,9 +302,9 @@ sdio_status_t sdio_send_cmd(uint8_t cmd, uint32_t arg,
 
 static inline void sdio_ck_disable(void) {
   SDIO->CLKCR &= ~(SDIO_CLKCR_CLKEN);
-  delay_ms(1);
+  systick_ms(1);
 }
 static inline void sdio_ck_enable(void) {
   SDIO->CLKCR |= SDIO_CLKCR_CLKEN;
-  delay_ms(1);
+  systick_ms(1);
 }

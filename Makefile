@@ -23,11 +23,12 @@ LDFLAGS=-mcpu=cortex-m4 -mthumb \
 #
 SOURCES = mcu/startup.c \
 					mcu/sysclock.c \
-					mcu/time.c \
+					mcu/systick.c \
 					mcu/timer.c \
 					mcu/gpio.c \
 					mcu/spi.c \
 					mcu/sdio.c \
+					drivers/time.c \
 					drivers/display.c \
 					drivers/rotary_encoder.c \
 					drivers/sd_card.c \

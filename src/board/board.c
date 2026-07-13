@@ -4,7 +4,7 @@
 #include "drivers/sd_card.h"
 #include "mcu/spi.h"
 #include "mcu/sysclock.h"
-#include "mcu/time.h"
+#include "mcu/systick.h"
 
 #define LCD_SPI_SCK PA5
 #define LCD_SPI_MOSI PA7
@@ -50,7 +50,7 @@ also note nucleo board manual pg. 36 for board pin layout
 
 void board_init(void) {
   sysclock_init(CPU_FREQ);
-  time_init();
+  systick_init();
 
   /* Peripherals */
   spi_config_t spi1_conf = {.mosi = LCD_SPI_MOSI,
