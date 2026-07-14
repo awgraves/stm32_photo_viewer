@@ -167,8 +167,9 @@ static void spi_tx_dma_chunk(spi_t *spi, const uint8_t data[], uint16_t len) {
   // set num data items to xfer, limited to uint16 size
   stream->NDTR = len;
 
-  spi_tx_dma_enable(spi);
+  // enable the stream before allowing spi to start
   dma_stream_enable(stream);
+  spi_tx_dma_enable(spi);
 
   // wait for xfer to complete
   volatile uint32_t *isr_reg = get_dma_isr(dma, dma->tx_stream_idx);
