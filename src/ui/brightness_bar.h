@@ -1,4 +1,5 @@
 #pragma once
+#include "graphics/bitmap.h"
 #include "graphics/color.h"
 #include "graphics/font.h"
 #include <stdbool.h>
@@ -6,11 +7,12 @@
 
 typedef struct {
   uint16_t x, y, height, width;
-  const char *text;
+  const indexed_bitmap_t *icon;
   const font_t *font;
-  color_t primary_color;   // font color when not focused
+  color_t primary_color;   // bar color when not focused
   color_t secondary_color; // bg color when not focused
+  uint8_t brightness_val;
   bool focused;
-} option_row_params_t;
+} brightness_bar_params_t;
 
-void option_row_draw(option_row_params_t *p);
+void brightness_bar_draw(brightness_bar_params_t *p);

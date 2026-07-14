@@ -1,11 +1,14 @@
+#include "assets/bitmaps/sun.h"
 #include "assets/bitmaps/title_text.h"
 #include "assets/fonts/ibm_bios_16.h"
 #include "assets/fonts/terminus_bold_16.h"
 #include "common_colors.h"
+#include "drivers/display.h"
 #include "graphics/renderer.h"
 #include "photo_album/photo_album.h"
 #include "screens.h"
 #include "slideshow/slideshow.h"
+#include "ui/brightness_bar.h"
 #include "ui/focus_list.h"
 #include "ui/option_row.h"
 #include "ui/window.h"
@@ -71,11 +74,13 @@ static const timing_opt_t timing_opts[NUM_TIMING_OPTS] = {
     {"10 seconds", SLIDESHOW_MODE_10_SECONDS},
 };
 
-static focus_item_t focus_items[NUM_TIMING_OPTS];
+#define NUM_FOCUS_ITEMS (NUM_TIMING_OPTS + 1) // +1 for brightness bar
+
+static focus_item_t focus_items[NUM_FOCUS_ITEMS];
 
 static focus_list_t focus_list = {
     .items = focus_items,
-    .count = NUM_TIMING_OPTS,
+    .count = NUM_FOCUS_ITEMS,
     .focused_idx = 0,
 };
 
@@ -94,6 +99,14 @@ static focus_list_t focus_list = {
   (WINDOW_FIRST_ROW_TOP_MARGIN + (WINDOW_ROW_HEIGHT * NUM_TIMING_OPTS) +       \
    WINDOW_LAST_ROW_BOTTOM_MARGIN + (WINDOW_LINE_THICKNESS << 1))
 
+#define BRIGHTNESS_TOP_MARGIN 25
+#define BRIGHTNESS_HEADER_HEIGHT (ibm_bios_16.height_px)
+#define BRIGHTNESS_BAR_TOP_MARGIN 12
+#define BRIGHTNESS_BAR_HIGHLIGHT_HEIGHT 32
+#define BRIGHTNESS_HEIGHT                                                      \
+  (BRIGHTNESS_HEADER_HEIGHT + BRIGHTNESS_BAR_TOP_MARGIN +                      \
+   BRIGHTNESS_BAR_HIGHLIGHT_HEIGHT)
+
 static void timing_option_render(const focus_item_t *self, bool focused) {
   option_row_params_t op = {
       .x = self->x,
@@ -102,8 +115,8 @@ static void timing_option_render(const focus_item_t *self, bool focused) {
       .width = self->width,
       .text = self->label,
       .font = &terminus_bold_16,
-      .text_color = TEXT_COLOR,
-      .bg_color = BG_COLOR,
+      .primary_color = TEXT_COLOR,
+      .secondary_color = BG_COLOR,
       .focused = focused,
   };
   option_row_draw(&op);
@@ -112,6 +125,29 @@ static void timing_option_render(const focus_item_t *self, bool focused) {
 static screen_t *timing_option_handle_press(const focus_item_t *self) {
   slideshow_set_mode(*(slideshow_mode_t *)self->data);
   return &viewer;
+}
+
+static void brightness_bar_render(const focus_item_t *self, bool focused) {
+  brightness_bar_params_t bbp = {
+      .x = self->x,
+      .y = self->y,
+      .height = self->height,
+      .width = self->width,
+      .brightness_val = display_get_brightness(),
+      .font = &terminus_bold_16,
+      .primary_color = TEXT_COLOR,
+      .secondary_color = BG_COLOR,
+      .icon = &sun,
+      .focused = focused,
+  };
+
+  brightness_bar_draw(&bbp);
+}
+
+// TODO: implement focus trap logic
+static screen_t *brightness_bar_handle_press(const focus_item_t *self) {
+  (void)self;
+  return &menu;
 }
 
 static void load_photo_count_text(char s[]);
@@ -123,7 +159,8 @@ static void menu_draw(void) {
 
   uint16_t total_height = title_text.height_px + PHOTO_COUNT_TOP_MARGIN +
                           PHOTO_COUNT_HEIGHT + WINDOW_TOP_MARGIN +
-                          WINDOW_HEIGHT;
+                          WINDOW_HEIGHT + BRIGHTNESS_TOP_MARGIN +
+                          BRIGHTNESS_HEIGHT;
 
   uint16_t running_y = renderer_get_centered_y(total_height);
 
@@ -184,9 +221,31 @@ static void menu_draw(void) {
     running_y += opt->height;
   }
 
-  focus_list_draw_all(&focus_list);
-
   running_y += WINDOW_LAST_ROW_BOTTOM_MARGIN + WINDOW_LINE_THICKNESS;
+  running_y += BRIGHTNESS_TOP_MARGIN;
+
+  // Brightness
+  const char *brightness_text = "Display";
+  uint16_t brightness_header_text_width =
+      renderer_get_text_width(brightness_text, &ibm_bios_16);
+  uint16_t brightness_header_x =
+      renderer_get_centered_x(brightness_header_text_width);
+
+  renderer_draw_text(brightness_header_x, running_y, brightness_text,
+                     &ibm_bios_16, TEXT_COLOR, BG_COLOR);
+  running_y += BRIGHTNESS_HEADER_HEIGHT;
+  running_y += BRIGHTNESS_BAR_TOP_MARGIN;
+
+  focus_list.items[NUM_FOCUS_ITEMS - 1] = (focus_item_t){
+      .x = WINDOW_OUTER_X_START,
+      .y = running_y,
+      .height = BRIGHTNESS_BAR_HIGHLIGHT_HEIGHT,
+      .width = WINDOW_OUTER_WIDTH,
+      .render = brightness_bar_render,
+      .on_press = brightness_bar_handle_press,
+  };
+
+  focus_list_draw_all(&focus_list);
 }
 
 static void load_photo_count_text(char s[]) {

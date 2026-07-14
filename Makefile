@@ -36,6 +36,7 @@ SOURCES = mcu/startup.c \
 					graphics/renderer.c \
 					assets/bitmaps/splash_logo.c \
 					assets/bitmaps/title_text.c \
+					assets/bitmaps/sun.c \
 					assets/fonts/ibm_bios_16.c \
 					assets/fonts/terminus_bold_16.c \
 					events/event_queue.c \
@@ -53,6 +54,7 @@ SOURCES = mcu/startup.c \
 					ui/button.c \
 					ui/option_row.c \
 					ui/focus_list.c \
+					ui/brightness_bar.c \
 					main.c
 
 ifeq ($(SPEED_PROFILE), FAST)

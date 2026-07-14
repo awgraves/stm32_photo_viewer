@@ -87,7 +87,6 @@ void display_init(display_config_t *c) {
                                  .arr_val = 100 - 1,
                                  .ccr_val = io.brightness_val};
   timer_init_in_pwm_mode(io.timer, &pwm_conf);
-  // gpio_digital_write(io.bl, HIGH);
 }
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
