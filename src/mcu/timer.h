@@ -2,13 +2,18 @@
 #include <stdint.h>
 
 typedef struct timer timer_t;
+
+extern timer_t timer1;
 extern timer_t timer2;
 
-typedef enum { TIMER_MODE_ENCODER } timer_mode_t;
-
 typedef struct {
-  timer_mode_t mode;
-} timer_config_t;
+  uint16_t psc_val; // prescaler for the clock
+  uint16_t arr_val; // period
+  uint16_t ccr_val; // duty cycle
+} timer_pwm_config_t;
 
-void timer_init(timer_t *tim, timer_config_t *config);
+void timer_init_in_encoder_mode(timer_t *tim);
+
+void timer_init_in_pwm_mode(timer_t *tim, timer_pwm_config_t *c);
+
 uint16_t timer_get_cnt(timer_t *tim);

@@ -76,7 +76,7 @@ typedef enum {
 
 // RM0390 pg. 178
 typedef enum {
-  GPIO_AF_TIM2 = 0x1U,
+  GPIO_AF_TIM1_TIM2 = 0x1U,
   GPIO_AF_SPI1 = 0x5U,
   GPIO_AF_SDIO = 0xCU,
 } gpio_af_t;

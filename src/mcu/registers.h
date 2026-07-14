@@ -57,17 +57,29 @@ typedef enum { RCC_SRC_HSI, RCC_SRC_HSE, RCC_SRC_PLL, RCC_SRC_PLLR } rcc_src_t;
 #define RCC_CFGR_SWS(src) ((src & 0x3) << 2)
 #define RCC_CFGR_SW(src) ((src & 0x3) << 0)
 
+// RM 0390 pg. 132
+typedef enum {
+  APB_PRESCALER_NONE = 0b0,
+  APB_PRESCALER_DIV_2 = 0b100,
+  APB_PRESCALER_DIV_4 = 0b101,
+  APB_PRESCALER_DIV_8 = 0b110,
+  APB_PRESCALER_DIV_16 = 0b111
+} apb_prescaler_t;
+#define RCC_CFGR_APB1_PRESCALE(prescaler) ((prescaler & 0x7) << 10)
+#define RCC_CFGR_APB2_PRESCALE(prescaler) ((prescaler & 0x7) << 13)
+
 // RM0390 pg.143
 #define RCC_AHB1ENR_GPIOA (BIT(0))
 #define RCC_AHB1ENR_DMA2 (BIT(22))
 
-// RM0390 pg. 146
+// RM0390 pg. 148
 #define RCC_APB1ENR_TIM2 (BIT(0))
 
 // RM0390 pg. 148
 #define RCC_APB2ENR_SPI1 (BIT(12))
 #define RCC_APB2ENR_SYSCFG (BIT(14))
 #define RCC_APB2ENR_SDIO (BIT(11))
+#define RCC_APB2ENR_TIM1 (BIT(0))
 
 // RM0390 pg. 87
 typedef struct {
@@ -207,18 +219,38 @@ typedef struct {
 #define NVIC_BASE 0xE000E100UL
 #define NVIC ((NVIC_t *const)NVIC_BASE)
 
-// RM 0390 pg. 569
+// General purpose (GP) and advanced (ADV) timers
+// share their initial ordering
 typedef struct {
   volatile uint32_t CR1, CR2, SMCR, DIER, SR, EGR, CCMR1, CCMR2, CCER, CNT, PSC,
-      ARR, CCR1, CCR2, CCR3, CCR4, DCR, DMAR, OR;
-} TIM_t;
+      ARR;
+} TIM_COMMON_t;
+
+// RM 0390 pg. 569, General Purpose
+typedef struct {
+  TIM_COMMON_t common;
+  volatile uint32_t CCR1, CCR2, CCR3, CCR4, DCR, DMAR, OR;
+} TIM_GP_t;
 
 // RM 0390 pg. 59, on APB1 bus
 #define TIM2_BASE (0x40000000UL)
-#define TIM2 ((TIM_t *const)TIM2_BASE)
+#define TIM2 ((TIM_GP_t *const)TIM2_BASE)
+
+// RM 0390 pg. 566, (advanced control timer)
+typedef struct {
+  TIM_COMMON_t common;
+  volatile uint32_t RCR, CCR1, CCR2, CCR3, CCR4, BDTR, DCR, DMAR;
+} TIM_ADV_t;
+
+// RM 0390 pg. 58, on APB2 bus
+#define TIM1_BASE (0x40010000)
+#define TIM1 ((TIM_ADV_t *const)TIM1_BASE)
 
 // RM0390 pg. 548 (control reg1)
+// auto-reload preload enable
+#define TIMx_CR1_ARPE (BIT(7))
 #define TIMx_CR1_CEN (BIT(0))
+
 // RM0390 pg. 552 (slave mode control)
 #define TIMx_SMCR_SMS_T1_EDGE_TRIGGERS (0x2U)
 #define TIMx_SMCR_SMS_BOTH_EDGES_TRIGGER (0x3U)
@@ -226,11 +258,23 @@ typedef struct {
 // input capture 1 and 2 filters
 #define TIMx_CCMR1_IC2F_4_SAMPLES ((0x2) << 12)
 #define TIMx_CCMR1_IC1F_4_SAMPLES ((0x2) << 4)
+
+#define TIMx_CCMR2_OC4M_PWM_MODE_1 ((0x6) << 12)
+#define TIMx_CCMR2_OC4PE (BIT(11))
+
 // RM0390 pg. 562 (capture/compare enable)
 #define TIMx_CCER_CC1_ACTIVE_LOW (BIT(1))
 #define TIMx_CCER_CC2_ACTIVE_LOW (BIT(5))
 #define TIMx_CCER_CC1_EN (BIT(0))
 #define TIMx_CCER_CC2_EN (BIT(4))
+#define TIMx_CCER_CC4_EN (BIT(12))
+
+// RM0390 pg. 493
+// forces an update generation
+#define TIMx_EGR_UG (BIT(0))
+
+// Advanced timers require main output enable
+#define TIM_ADV_BDTR_MOE (BIT(15))
 
 // RM 0390 pg. 1016, APB2 bus
 typedef struct {

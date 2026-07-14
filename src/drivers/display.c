@@ -1,5 +1,7 @@
 #include "display.h"
+#include "mcu/sysclock.h"
 #include "time.h"
+#include <stdbool.h>
 
 /* Commands begin on display datasheet pg. 83 */
 #define CMD_NOOP 0x00
@@ -25,6 +27,8 @@
 
 #define CMD_MEM_WRITE 0x2C
 
+#define FALLBACK_BRIGHTNESS 50
+
 static display_config_t io;
 
 void begin_tx(void) { gpio_clear_pin(io.cs); }
@@ -34,6 +38,7 @@ static void write_cmd(uint8_t cmd);
 static void write_param(uint8_t data);
 
 static void hard_reset(void);
+static inline bool valid_brightness(uint8_t val);
 
 /*
   Public API
@@ -42,10 +47,17 @@ static void hard_reset(void);
 void display_init(display_config_t *c) {
   io = *c;
 
+  if (!valid_brightness(io.brightness_val)) {
+    io.brightness_val = FALLBACK_BRIGHTNESS;
+  }
+
   gpio_set_mode(io.cs, GPIO_MODE_OUTPUT);
   gpio_set_mode(io.dc, GPIO_MODE_OUTPUT);
   gpio_set_mode(io.rst, GPIO_MODE_OUTPUT);
-  gpio_set_mode(io.bl, GPIO_MODE_OUTPUT);
+
+  // gpio_set_mode(io.bl, GPIO_MODE_OUTPUT);
+  gpio_set_mode(io.bl, GPIO_MODE_AF);
+  gpio_set_AF(io.bl, c->bl_af);
 
   // ensure off before hard reset
   end_tx();
@@ -68,7 +80,14 @@ void display_init(display_config_t *c) {
   end_tx();
 
   // turn on backlight
-  gpio_digital_write(io.bl, HIGH);
+  // targeting about 10khz PWM freq, just arbitrarily not too high/low
+  // freq = timer_clock / ((PSC+1) * (ARR + 1))
+  uint16_t psc_divisor = sysclock_get_cpu_hz() / (10000 * 100);
+  timer_pwm_config_t pwm_conf = {.psc_val = psc_divisor - 1,
+                                 .arr_val = 100 - 1,
+                                 .ccr_val = io.brightness_val};
+  timer_init_in_pwm_mode(io.timer, &pwm_conf);
+  // gpio_digital_write(io.bl, HIGH);
 }
 
 void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
@@ -105,6 +124,18 @@ void display_pixel_stream_write(const uint16_t *pixels, uint32_t count) {
   spi_tx(io.spi, (uint8_t *)pixels, count * 2);
 }
 
+uint8_t display_get_brightness(void) { return io.brightness_val; }
+
+void display_set_brightness(uint8_t val) {
+  if (!valid_brightness(val)) {
+    return;
+  }
+
+  // TODO: update the val should update the timer
+
+  io.brightness_val = val;
+}
+
 /*
   helpers
 */
@@ -126,3 +157,5 @@ static void write_param(uint8_t data) {
   gpio_set_pin(io.dc);
   spi_tx(io.spi, &data, 1);
 }
+
+static inline bool valid_brightness(uint8_t val) { return val <= 100; }

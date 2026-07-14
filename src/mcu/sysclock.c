@@ -9,70 +9,83 @@ typedef struct {
   uint32_t pllp; // for sysclock
   uint32_t pllq; // for pll48clk (sdio)
   uint16_t flash_acr_latency;
+  apb_prescaler_t apb1_prescaler; // APB1 must not exceed 45 MHZ
+  apb_prescaler_t apb2_prescaler; // APB2 must not exceed 90 MHZ
 } config_t;
 
 const config_t mhz16 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_0,
     .plln = RCC_PLLCFGR_PLLN(128),            // VCO becomes 128Mhz
     .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_8), // 128 / 8 = 16mhz
-    .pllq =
-        RCC_PLLCFGR_PLLQ(4) // 128 / 4 = 32mhz (less than 48mhz, but acceptable)
-};
+    .pllq = RCC_PLLCFGR_PLLQ(
+        4), // 128 / 4 = 32mhz (less than 48mhz, but acceptable)
+    .apb1_prescaler = APB_PRESCALER_NONE,
+    .apb2_prescaler = APB_PRESCALER_NONE};
 
-const config_t mhz32 = {
-    .flash_acr_latency = FLASH_ACR_LATENCY_1,
-    .plln = RCC_PLLCFGR_PLLN(192),            // VCO becomes 192Mhz
-    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 192 / 6 = 32mhz
-    .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
-};
+const config_t mhz32 = {.flash_acr_latency = FLASH_ACR_LATENCY_1,
+                        .plln = RCC_PLLCFGR_PLLN(192), // VCO becomes 192Mhz
+                        .pllp =
+                            RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 192 / 6 = 32mhz
+                        .pllq = RCC_PLLCFGR_PLLQ(4),          // 192 / 4 = 48mhz
+                        .apb1_prescaler = APB_PRESCALER_NONE,
+                        .apb2_prescaler = APB_PRESCALER_NONE};
 
-const config_t mhz40 = {
-    .flash_acr_latency = FLASH_ACR_LATENCY_1,
-    .plln = RCC_PLLCFGR_PLLN(240),            // VCO becomes 240Mhz
-    .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 240 / 6 = 40mhz
-    .pllq = RCC_PLLCFGR_PLLQ(5),              // 240 / 5 = 48mhz
-};
+const config_t mhz40 = {.flash_acr_latency = FLASH_ACR_LATENCY_1,
+                        .plln = RCC_PLLCFGR_PLLN(240), // VCO becomes 240Mhz
+                        .pllp =
+                            RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 240 / 6 = 40mhz
+                        .pllq = RCC_PLLCFGR_PLLQ(5),          // 240 / 5 = 48mhz
+                        .apb1_prescaler = APB_PRESCALER_NONE,
+                        .apb2_prescaler = APB_PRESCALER_NONE};
 
 const config_t mhz48 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
     .plln = RCC_PLLCFGR_PLLN(192),            // VCO becomes 192Mhz
     .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4), // 192 / 4 = 48mhz
-    .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
-};
+    .pllq = RCC_PLLCFGR_PLLQ(4),              // 192 / 4 = 48mhz
+    .apb1_prescaler = APB_PRESCALER_DIV_2,    // 24 mhz, less than 45mhz max
+    .apb2_prescaler = APB_PRESCALER_NONE};
 
 const config_t mhz56 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
     .plln = RCC_PLLCFGR_PLLN(336),            // VCO becomes 336Mhz
     .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 336 / 6 = 56mhz
-    .pllq = RCC_PLLCFGR_PLLQ(7)               // 336 / 7 = 48mhz
-};
+    .pllq = RCC_PLLCFGR_PLLQ(7),              // 336 / 7 = 48mhz
+    .apb1_prescaler = APB_PRESCALER_DIV_2,    // 28 mhz, less than 45mhz max
+    .apb2_prescaler = APB_PRESCALER_NONE};
 
 const config_t mhz60 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_1,
     .plln = RCC_PLLCFGR_PLLN(240),            // VCO becomes 240Mhz
     .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_4), // 240 / 4 = 60mhz
-    .pllq = RCC_PLLCFGR_PLLQ(5)               // 240 / 5 = 48mhz
-};
+    .pllq = RCC_PLLCFGR_PLLQ(5),              // 240 / 5 = 48mhz
+    .apb1_prescaler = APB_PRESCALER_DIV_2,    // 30 mhz, less than 45mhz max
+    .apb2_prescaler = APB_PRESCALER_NONE};
 
 const config_t mhz84 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_2,
     .plln = RCC_PLLCFGR_PLLN(336),            // VCO becomes 336Mhz
     .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_6), // 336 / 6 = 86mhz
-    .pllq = RCC_PLLCFGR_PLLQ(7)               // 336 / 7 = 48mhz
-};
+    .pllq = RCC_PLLCFGR_PLLQ(7),              // 336 / 7 = 48mhz
+    .apb1_prescaler = APB_PRESCALER_DIV_2,    // 42 mhz, less than 45mhz max
+    .apb2_prescaler = APB_PRESCALER_NONE};
 
 const config_t mhz96 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_3,
     .plln = RCC_PLLCFGR_PLLN(192),            // VCO becomes 192Mhz
     .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_2), // 192 / 2 = 96mhz
-    .pllq = RCC_PLLCFGR_PLLQ(4)               // 192 / 4 = 48mhz
+    .pllq = RCC_PLLCFGR_PLLQ(4),              // 192 / 4 = 48mhz
+    .apb1_prescaler = APB_PRESCALER_DIV_4,    // 24 mhz, less than 45mhz max
+    .apb2_prescaler = APB_PRESCALER_DIV_2     // 48 mhz, less than 90mhz max
 };
 
 const config_t mhz168 = {
     .flash_acr_latency = FLASH_ACR_LATENCY_5,
     .plln = RCC_PLLCFGR_PLLN(336),            // VCO becomes 336Mhz
     .pllp = RCC_PLLCFGR_PLLP(RCC_PLLP_DIV_2), // 336 / 2 = 168mhz
-    .pllq = RCC_PLLCFGR_PLLQ(7)               // 336 / 7 = 48mhz
+    .pllq = RCC_PLLCFGR_PLLQ(7),              // 336 / 7 = 48mhz
+    .apb1_prescaler = APB_PRESCALER_DIV_4,    // 42 mhz, less than 45mhz max
+    .apb2_prescaler = APB_PRESCALER_DIV_2     // 84 mhz, less than 90mhz max
 };
 
 /*
@@ -169,6 +182,10 @@ void sysclock_init(cpu_freq_t freq) {
   RCC->CR |= RCC_CR_PLLON;
   while (!(RCC->CR & RCC_CR_PLLRDY))
     ;
+
+  // Must config the APB buses to not exceed their thresholds
+  RCC->CFGR |= RCC_CFGR_APB1_PRESCALE(config->apb1_prescaler);
+  RCC->CFGR |= RCC_CFGR_APB2_PRESCALE(config->apb2_prescaler);
 
   // RMO390 pg. 133
   // switch from HSI to PLL as sysclock source

@@ -11,10 +11,10 @@
 #define LCD_CS PA9
 #define LCD_DC PA8
 #define LCD_RST PA10
-#define LCD_BL PA11
+#define LCD_BL PA11 // TIM1_CH4, datasheet pg 53
 
-#define ENC_A PA0 // TIM2_CH1 AF datasheet pg 46
-#define ENC_B PA1 // TIM2_CH2 AF
+#define ENC_A PA0 // TIM2_CH1 AF datasheet pg 47
+#define ENC_B PA1 // TIM2_CH2 AF datasheet pg 47
 #define ENC_CENTER PA4
 
 // datasheet AF table pg. 59-60
@@ -40,7 +40,7 @@ also note nucleo board manual pg. 36 for board pin layout
 */
 #if defined(SPEED_PROFILE_FAST)
 #define CPU_FREQ CPU_FREQ_168_MHZ
-#define SPI_BAUD_DIV SPI_BAUD_DIV_4
+#define SPI_BAUD_DIV SPI_BAUD_DIV_2
 #define SPI_GPIO_SPEED GPIO_SPEED_FAST
 #elif defined(SPEED_PROFILE_SLOW)
 #define CPU_FREQ CPU_FREQ_32_MHZ
@@ -60,14 +60,20 @@ void board_init(void) {
   spi_init(&spi1, &spi1_conf);
 
   /* Drivers */
-  display_config_t display_conf = {
-      .spi = &spi1, .cs = LCD_CS, .dc = LCD_DC, .rst = LCD_RST, .bl = LCD_BL};
+  display_config_t display_conf = {.spi = &spi1,
+                                   .timer = &timer1,
+                                   .bl_af = GPIO_AF_TIM1_TIM2,
+                                   .brightness_val = 50,
+                                   .cs = LCD_CS,
+                                   .dc = LCD_DC,
+                                   .rst = LCD_RST,
+                                   .bl = LCD_BL};
   display_init(&display_conf);
 
   rotary_encoder_config_t rot_conf = {.sw1 = ENC_CENTER,
                                       .enca = ENC_A,
                                       .encb = ENC_B,
-                                      .enc_af = GPIO_AF_TIM2,
+                                      .enc_af = GPIO_AF_TIM1_TIM2,
                                       .timer = &timer2};
   rotary_encoder_init(&rot_conf);
 

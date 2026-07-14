@@ -38,8 +38,7 @@ void rotary_encoder_init(rotary_encoder_config_t *config) {
   gpio_set_pupd(config->enca, GPIO_PUPD_PULL_UP);
   gpio_set_pupd(config->encb, GPIO_PUPD_PULL_UP);
 
-  timer_config_t timer_conf = {.mode = TIMER_MODE_ENCODER};
-  timer_init(io.timer, &timer_conf);
+  timer_init_in_encoder_mode(io.timer);
 }
 
 static bool rotary_encoder_button_poll(void);
