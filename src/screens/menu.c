@@ -114,9 +114,9 @@ static focus_list_t focus_list = {
   (WINDOW_FIRST_ROW_TOP_MARGIN + (WINDOW_ROW_HEIGHT * NUM_TIMING_OPTS) +       \
    WINDOW_LAST_ROW_BOTTOM_MARGIN + (WINDOW_LINE_THICKNESS << 1))
 
-#define BRIGHTNESS_TOP_MARGIN 25
+#define BRIGHTNESS_TOP_MARGIN 30
 #define BRIGHTNESS_HEADER_HEIGHT (ibm_bios_16.height_px)
-#define BRIGHTNESS_BAR_TOP_MARGIN 12
+#define BRIGHTNESS_BAR_TOP_MARGIN 8
 #define BRIGHTNESS_BAR_HIGHLIGHT_HEIGHT 32
 #define BRIGHTNESS_HEIGHT                                                      \
   (BRIGHTNESS_HEADER_HEIGHT + BRIGHTNESS_BAR_TOP_MARGIN +                      \
@@ -141,11 +141,6 @@ static screen_t *timing_option_handle_press(const focus_item_t *self) {
   slideshow_set_mode(*(slideshow_mode_t *)self->data);
   return &viewer;
 }
-
-/*
-      .primary_color = COLOR_WHITE,
-      .secondary_color = COLOR_SPLASH_BLACK,
-*/
 
 static color_t bb_primary = TEXT_COLOR;
 static color_t bb_secondary = BG_COLOR;
