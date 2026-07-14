@@ -147,6 +147,9 @@ static screen_t *timing_option_handle_press(const focus_item_t *self) {
       .secondary_color = COLOR_SPLASH_BLACK,
 */
 
+static color_t bb_primary = TEXT_COLOR;
+static color_t bb_secondary = BG_COLOR;
+
 static void brightness_bar_render(const focus_item_t *self, bool focused) {
   brightness_bar_params_t bbp = {
       .x = self->x,
@@ -155,8 +158,8 @@ static void brightness_bar_render(const focus_item_t *self, bool focused) {
       .width = self->width,
       .brightness_val = display_brightness_get(),
       .font = &terminus_bold_16,
-      .primary_color = TEXT_COLOR,
-      .secondary_color = BG_COLOR,
+      .primary_color = bb_primary,
+      .secondary_color = bb_secondary,
       .icon = &sun,
       .focused = focused,
   };
@@ -166,6 +169,14 @@ static void brightness_bar_render(const focus_item_t *self, bool focused) {
 
 static screen_t *brightness_bar_handle_press(const focus_item_t *self) {
   nav_mode = !nav_mode;
+  if (nav_mode) {
+    bb_primary = TEXT_COLOR;
+    bb_secondary = BG_COLOR;
+  } else {
+    bb_primary = COLOR_WHITE;
+    bb_secondary = COLOR_SPLASH_BLACK;
+  }
+  brightness_bar_render(self, true);
   return &menu;
 }
 
