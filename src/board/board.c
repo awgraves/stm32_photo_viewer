@@ -40,7 +40,7 @@ also note nucleo board manual pg. 36 for board pin layout
 */
 #if defined(SPEED_PROFILE_FAST)
 #define CPU_FREQ CPU_FREQ_168_MHZ
-#define SPI_BAUD_DIV SPI_BAUD_DIV_2
+#define SPI_BAUD_DIV SPI_BAUD_DIV_4
 #define SPI_GPIO_SPEED GPIO_SPEED_FAST
 #elif defined(SPEED_PROFILE_SLOW)
 #define CPU_FREQ CPU_FREQ_32_MHZ
