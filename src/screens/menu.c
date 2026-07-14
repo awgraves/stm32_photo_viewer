@@ -90,6 +90,7 @@ static const timing_opt_t timing_opts[NUM_TIMING_OPTS] = {
 };
 
 #define NUM_FOCUS_ITEMS (NUM_TIMING_OPTS + 1) // +1 for brightness bar
+#define BRIGHTNESS_BAR_FOCUS_ITEM_IDX (NUM_FOCUS_ITEMS - 1)
 
 static focus_item_t focus_items[NUM_FOCUS_ITEMS];
 
@@ -145,8 +146,9 @@ static screen_t *timing_option_handle_press(const focus_item_t *self) {
 static color_t bb_primary = TEXT_COLOR;
 static color_t bb_secondary = BG_COLOR;
 
-static void brightness_bar_render(const focus_item_t *self, bool focused) {
-  brightness_bar_params_t bbp = {
+static brightness_bar_params_t make_bbp(const focus_item_t *self,
+                                        bool focused) {
+  return (brightness_bar_params_t){
       .x = self->x,
       .y = self->y,
       .height = self->height,
@@ -158,7 +160,10 @@ static void brightness_bar_render(const focus_item_t *self, bool focused) {
       .icon = &sun,
       .focused = focused,
   };
+}
 
+static void brightness_bar_render(const focus_item_t *self, bool focused) {
+  brightness_bar_params_t bbp = make_bbp(self, focused);
   brightness_bar_draw(&bbp);
 }
 
@@ -176,7 +181,9 @@ static screen_t *brightness_bar_handle_press(const focus_item_t *self) {
 }
 
 static void update_brightness_bar(void) {
-  brightness_bar_render(&focus_list.items[NUM_FOCUS_ITEMS - 1], true);
+  focus_item_t *self = &focus_list.items[BRIGHTNESS_BAR_FOCUS_ITEM_IDX];
+  brightness_bar_params_t bbp = make_bbp(self, true);
+  brightness_bar_draw_values_only(&bbp);
 }
 
 static void load_photo_count_text(char s[]);
@@ -265,7 +272,7 @@ static void menu_draw(void) {
   running_y += BRIGHTNESS_HEADER_HEIGHT;
   running_y += BRIGHTNESS_BAR_TOP_MARGIN;
 
-  focus_list.items[NUM_FOCUS_ITEMS - 1] = (focus_item_t){
+  focus_list.items[BRIGHTNESS_BAR_FOCUS_ITEM_IDX] = (focus_item_t){
       .x = WINDOW_OUTER_X_START,
       .y = running_y,
       .height = BRIGHTNESS_BAR_HIGHLIGHT_HEIGHT,

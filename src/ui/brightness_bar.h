@@ -15,4 +15,8 @@ typedef struct {
   bool focused;
 } brightness_bar_params_t;
 
+// the full draw
 void brightness_bar_draw(brightness_bar_params_t *p);
+
+// targeted draw for smoother updates
+void brightness_bar_draw_values_only(brightness_bar_params_t *p);
