@@ -129,3 +129,9 @@ void timer_init_in_pwm_mode(timer_t *tim, timer_pwm_config_t *conf) {
 }
 
 uint16_t timer_get_cnt(timer_t *tim) { return timer_get_common_regs(tim)->CNT; }
+
+void timer_update_ccr(timer_t *tim, uint16_t new_ccr) {
+  if (tim->kind == TIMER_KIND_ADV) {
+    tim->regs.adv->CCR4 = new_ccr;
+  }
+}

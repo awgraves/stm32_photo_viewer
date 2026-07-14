@@ -13,7 +13,7 @@ typedef struct {
 } timer_pwm_config_t;
 
 void timer_init_in_encoder_mode(timer_t *tim);
-
 void timer_init_in_pwm_mode(timer_t *tim, timer_pwm_config_t *c);
 
 uint16_t timer_get_cnt(timer_t *tim);
+void timer_update_ccr(timer_t *tim, uint16_t new_ccr);

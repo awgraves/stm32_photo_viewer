@@ -26,6 +26,6 @@ void display_pixel_stream_write(const uint16_t *pixels, uint32_t count);
 void display_pixel_stream_end(void);
 
 // brightness val is between 0 and 100
-uint8_t display_get_brightness(void);
-// brightness val is between 0 and 100
-void display_set_brightness(uint8_t val);
+uint8_t display_brightness_get(void);
+void display_brightness_increase(uint8_t step);
+void display_brightness_decrease(uint8_t step);

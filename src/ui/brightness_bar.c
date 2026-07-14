@@ -1,7 +1,15 @@
 #include "brightness_bar.h"
 #include "graphics/renderer.h"
+#include "utils/string.h"
 
 #define LINE_THICKNESS 2
+
+static void get_percentage_text(uint8_t val, char s[5]) {
+  // up to 4 slots '100%' + 1 for termination
+  uint8_t n = itoa(val, s);
+  s[n] = '%';
+  s[++n] = '\0';
+}
 
 void brightness_bar_draw(brightness_bar_params_t *p) {
   color_t bg_color = p->focused ? p->primary_color : p->secondary_color;
@@ -37,11 +45,13 @@ void brightness_bar_draw(brightness_bar_params_t *p) {
 
   uint16_t pixels_per_perc = outer_bar_width / 100;
 
-  renderer_draw_rect(outer_bar_x, outer_bar_y, 50 * pixels_per_perc,
-                     outer_bar_height, bar_color);
+  renderer_draw_rect(outer_bar_x, outer_bar_y,
+                     p->brightness_val * pixels_per_perc, outer_bar_height,
+                     bar_color);
 
   // percentage
-  const char *p_text = "50%";
+  char p_text[5];
+  get_percentage_text(p->brightness_val, p_text);
   uint16_t p_text_width = renderer_get_text_width(p_text, p->font);
   uint16_t p_text_x = p->x + p->width - (x_gap >> 1) - (p_text_width >> 1);
   uint16_t p_text_y = center_y - (p->font->height_px >> 1);

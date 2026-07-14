@@ -14,11 +14,10 @@
 #include "ui/window.h"
 #include "utils/string.h"
 
-/*
-  Public API
-*/
+#define BRIGHTNESS_STEP_SIZE 10
 
 static focus_list_t focus_list;
+static bool nav_mode = true;
 
 void menu_enter(void);
 screen_t *menu_handle_event(event_t event);
@@ -29,6 +28,12 @@ screen_t menu = {
 
 static void bg_draw(void);
 static void menu_draw(void);
+
+static void update_brightness_bar(void);
+
+/*
+  Public API
+*/
 
 void menu_enter(void) {
   bg_draw();
@@ -42,10 +47,20 @@ screen_t *menu_handle_event(event_t event) {
   case EVENT_ENCODER_PRESSED:
     return focus_list_handle_press(&focus_list);
   case EVENT_ENCODER_CW:
-    focus_list_move_down(&focus_list);
+    if (nav_mode) {
+      focus_list_move_down(&focus_list);
+    } else {
+      display_brightness_increase(BRIGHTNESS_STEP_SIZE);
+      update_brightness_bar();
+    }
     break;
   case EVENT_ENCODER_CCW:
-    focus_list_move_up(&focus_list);
+    if (nav_mode) {
+      focus_list_move_up(&focus_list);
+    } else {
+      display_brightness_decrease(BRIGHTNESS_STEP_SIZE);
+      update_brightness_bar();
+    }
     break;
   default:
     // do nothing
@@ -127,13 +142,18 @@ static screen_t *timing_option_handle_press(const focus_item_t *self) {
   return &viewer;
 }
 
+/*
+      .primary_color = COLOR_WHITE,
+      .secondary_color = COLOR_SPLASH_BLACK,
+*/
+
 static void brightness_bar_render(const focus_item_t *self, bool focused) {
   brightness_bar_params_t bbp = {
       .x = self->x,
       .y = self->y,
       .height = self->height,
       .width = self->width,
-      .brightness_val = display_get_brightness(),
+      .brightness_val = display_brightness_get(),
       .font = &terminus_bold_16,
       .primary_color = TEXT_COLOR,
       .secondary_color = BG_COLOR,
@@ -144,10 +164,13 @@ static void brightness_bar_render(const focus_item_t *self, bool focused) {
   brightness_bar_draw(&bbp);
 }
 
-// TODO: implement focus trap logic
 static screen_t *brightness_bar_handle_press(const focus_item_t *self) {
-  (void)self;
+  nav_mode = !nav_mode;
   return &menu;
+}
+
+static void update_brightness_bar(void) {
+  brightness_bar_render(&focus_list.items[NUM_FOCUS_ITEMS - 1], true);
 }
 
 static void load_photo_count_text(char s[]);
@@ -252,7 +275,6 @@ static void load_photo_count_text(char s[]) {
   uint32_t photo_count = photo_album_get_photo_count();
 
   uint8_t char_count = itoa(photo_count, s);
-  char_count++; // account for \0
   char *label = " Photos";
   char c;
   while ((c = *label++)) {

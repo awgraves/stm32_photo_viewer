@@ -39,6 +39,7 @@ static void write_param(uint8_t data);
 
 static void hard_reset(void);
 static inline bool valid_brightness(uint8_t val);
+static void display_brightness_set(uint8_t val);
 
 /*
   Public API
@@ -123,16 +124,29 @@ void display_pixel_stream_write(const uint16_t *pixels, uint32_t count) {
   spi_tx(io.spi, (uint8_t *)pixels, count * 2);
 }
 
-uint8_t display_get_brightness(void) { return io.brightness_val; }
+uint8_t display_brightness_get(void) { return io.brightness_val; }
 
-void display_set_brightness(uint8_t val) {
-  if (!valid_brightness(val)) {
+void display_brightness_increase(uint8_t step) {
+  if (io.brightness_val == 100 || step > 100) {
+    return;
+  }
+  uint8_t new_brightness =
+      (io.brightness_val + step <= 100) ? io.brightness_val + step : 100;
+  display_brightness_set(new_brightness);
+}
+
+void display_brightness_decrease(uint8_t step) {
+  if (io.brightness_val == 0 || step > 100) {
     return;
   }
 
-  // TODO: update the val should update the timer
-
-  io.brightness_val = val;
+  uint8_t new_brightness;
+  if (step > io.brightness_val) {
+    new_brightness = 0;
+  } else {
+    new_brightness = (io.brightness_val - step);
+  }
+  display_brightness_set(new_brightness);
 }
 
 /*
@@ -158,3 +172,12 @@ static void write_param(uint8_t data) {
 }
 
 static inline bool valid_brightness(uint8_t val) { return val <= 100; }
+
+static void display_brightness_set(uint8_t val) {
+  if (!valid_brightness(val)) {
+    return;
+  }
+
+  io.brightness_val = val;
+  timer_update_ccr(io.timer, io.brightness_val);
+}

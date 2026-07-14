@@ -26,5 +26,5 @@ uint8_t itoa(uint32_t n, char s[]) {
   s[i] = '\0';
   reverse(s);
 
-  return i - 1;
+  return i;
 }
