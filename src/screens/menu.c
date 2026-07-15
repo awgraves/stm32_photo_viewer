@@ -282,6 +282,14 @@ static void menu_draw(void) {
   };
 
   focus_list_draw_all(&focus_list);
+
+  const char *name_text = "Built by Andrew Organist";
+  uint16_t name_text_width =
+      renderer_get_text_width(name_text, &terminus_bold_16);
+  uint16_t name_text_x = renderer_get_centered_x(name_text_width);
+  uint16_t name_text_y = DISPLAY_HEIGHT_PIXELS - 32 - 1;
+  renderer_draw_text(name_text_x, name_text_y, name_text, &terminus_bold_16,
+                     TEXT_COLOR, BG_COLOR);
 }
 
 static void load_photo_count_text(char s[]) {
