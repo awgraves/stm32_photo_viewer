@@ -23,7 +23,7 @@
 #define MADCTL_MV (1U << 5)
 #define MADCTL_BGR (1U << 3)
 
-#define PARAMS_MADCTL ((MADCTL_BGR | MADCTL_MY))
+#define PARAMS_MADCTL ((MADCTL_BGR | MADCTL_MX))
 
 #define CMD_MEM_WRITE 0x2C
 
