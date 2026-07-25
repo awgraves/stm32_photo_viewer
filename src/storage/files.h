@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#define ENTRIES_CAP 2048 // 2048 x 8 bytes = 16kb out of 128kb RAM
+#define ENTRIES_CAP 5000 // 5000 x 8 bytes = 40,000 = ~39KB out of 128KB RAM
 
 typedef struct {
   uint32_t first_cluster;

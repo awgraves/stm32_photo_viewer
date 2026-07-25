@@ -21,7 +21,7 @@ Watch the project build video on YouTube 👇
 [![STM32 Photo Viewer - From Start to Finish](https://img.youtube.com/vi/W2JZO2xCuKY/maxresdefault.jpg)](https://www.youtube.com/watch?v=W2JZO2xCuKY)
 
 ## Features
-- Handles up to 2048 photos
+- Handles up to ***5,000 photos*** at a time
 - Manual photo browse mode (turning the knob switches between photos)
 - Slideshow modes with 2, 5, or 10 second intervals
 - Adjustable display brightness
@@ -55,11 +55,11 @@ See the tool [README](tools/README.md) for more details.
 1. Run `make setup` to generate the clangd compile commands for your IDE.
 
 ## RAM Budgeting
-Total RAM available on STM32F446RE: **128kb**
+Total RAM available on STM32F446RE: **128KB**
 
 ### Noteworthy Buffer Allocations
-- Photo rendering: 64kb (50% of total RAM)
-- File list: 16kb (12.5%), translates to max 2048 photos
-- Graphics rendering: 10kb (~8%)
+- Photo rendering: 64KB (50% of total RAM)
+- File list: ~39KB (~30.5%), translates to max 5000 photos
+- Graphics rendering: 10KB (~8%)
 
-Leaves 38kb for stack (~29%)
+Leaves 15KB for stack with plenty of head room (~11%)
