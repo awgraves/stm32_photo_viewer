@@ -1,9 +1,11 @@
 # STM32 Photo Viewer
-A picture-frame-like embedded display that renders photos from a micro SD card.
+A picture-frame-like embedded device that renders photos from a micro SD card.
+
+![STM32 Photo Viewer Demo](./docs/photo_viewer_demo.gif)
 
 Firmware written 100% by hand from scratch. ✍️
 - ❌ no generated code
-- ❌ no 3rd party frameworks or libraries (*see note below)
+- ❌ no 3rd party frameworks or libraries
 - ❌ no vendor hardware abstraction layer (HAL), not even CMSIS headers
 - ✅ Linker script, vector table, reset handler, clock trees, all manual
 - ✅ GPIO, SPI, SDIO, TIMER, DMA drivers from the ground up
@@ -12,16 +14,23 @@ Firmware written 100% by hand from scratch. ✍️
 
 And for the physical device:
 - ✅ Custom PCB design (with EasyEDA + JLCPCB as manufacturer)
-- ✅ Homemade, 3D printed case (on a Bambu Labs A1 mini)
+- ✅ Homemade, 3D printed case (on a Bambu Lab A1 mini)
 
-*Note: the `convert.py` utility script under `/tools` does rely on a couple python libraries, but this runs on a PC and is separate from the firmware.
-See the Loading Photos section below for more info.
+Watch the project build video on YouTube 👇
+
+[![STM32 Photo Viewer - From Start to Finish](https://img.youtube.com/vi/W2JZO2xCuKY/maxresdefault.jpg)](https://www.youtube.com/watch?v=W2JZO2xCuKY)
+
+## Features
+- Handles up to 2048 photos
+- Manual photo browse mode (turning the knob switches between photos)
+- Slideshow modes with 2, 5, or 10 second intervals
+- Adjustable display brightness
 
 ## Hardware
 - STM32F446RE (32-bit Arm Cortex M4 processor) MCU
-- 3.5" TFT LCD display w/ ST7796 controller
-- EC11 rotary encoder
-- SD card slot
+- [3.5" TFT LCD display w/ ST7796 controller](https://www.amazon.com/dp/B0DFWL9M9B)
+- [EC11 rotary encoder](https://www.amazon.com/dp/B0DZTX96NH)
+- SD card slot (during initial prototyping, used the [Adafruit breakout module](https://www.adafruit.com/product/4682))
 
 ## Schematics
 ![EasyEDA Board Schematics](./docs/schematics/stm32_photo_viewer_schematics.png)
@@ -33,13 +42,12 @@ See the Loading Photos section below for more info.
 5. [UV Python package & project manager](https://docs.astral.sh/uv/) (for photo conversion script)
 
 ## Loading Photos
-A modern, high capacity micro SD card is required for the firmware.
+A high capacity micro SD card is required for the firmware.
 The card must be pre-formatted to contain a FAT32 filesystem located at the 1st partition.
 
-The firmware also expects photos in a custom '.pic' file format.
+The firmware expects a custom `.pic` binary file format. 
 
-A convenient photo conversion script is included under `tools/convert.py`.
-
+A photo conversion script is included under `tools/convert.py`.
 See the tool [README](tools/README.md) for more details.
 
 
@@ -50,7 +58,7 @@ See the tool [README](tools/README.md) for more details.
 Total RAM available on STM32F446RE: **128kb**
 
 ### Noteworthy Buffer Allocations
-- Photo rendering: 64kb (50% of total budget)
+- Photo rendering: 64kb (50% of total RAM)
 - File list: 16kb (12.5%), translates to max 2048 photos
 - Graphics rendering: 10kb (~8%)
 
