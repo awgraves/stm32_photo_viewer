@@ -2,7 +2,7 @@ build
 
 compile_commands.json
 
-tools/originals/*
+tools/inputs/*
 tools/outputs/*
 
 # Prerequisites
