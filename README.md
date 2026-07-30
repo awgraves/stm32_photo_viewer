@@ -27,7 +27,7 @@ Watch the project build video on YouTube 👇
 - Adjustable display brightness
 
 ## Hardware
-- STM32F446RE (32-bit Arm Cortex M4 processor) MCU
+- STM32F446RE (32-bit Arm Cortex M4 processor)
 - [3.5" TFT LCD display w/ ST7796 controller](https://www.amazon.com/dp/B0DFWL9M9B)
 - [EC11 rotary encoder](https://www.amazon.com/dp/B0DZTX96NH)
 - SD card slot (during initial prototyping, used the [Adafruit breakout module](https://www.adafruit.com/product/4682))
@@ -40,13 +40,13 @@ Watch the project build video on YouTube 👇
 2. [GNU Make](https://www.gnu.org/software/make/)
 3. [Bear](https://github.com/rizsotto/Bear) for clangd compile_commands generation
 4. [OpenOCD](https://openocd.org/pages/getting-openocd.html) for ST-link connection
-5. [UV Python package & project manager](https://docs.astral.sh/uv/) for photo conversion script
+5. [GDB](https://www.sourceware.org/gdb/) (optional)
+6. [UV Python package & project manager](https://docs.astral.sh/uv/) for photo conversion script
 
 ## Loading Photos
-A high capacity micro SD card is required for the firmware.
-The card must be pre-formatted to contain a FAT32 filesystem located at the 1st partition.
+A high capacity micro SD card is required and must be pre-formatted to contain a FAT32 filesystem located at the 1st partition.
 
-The firmware expects a custom `.pic` binary file format. 
+The firmware expects photos to be in the root dir of the FS in a `.pic` binary file format. 
 
 A photo conversion script is included under `tools/convert.py`.
 See the tool [README](tools/README.md) for more details.
